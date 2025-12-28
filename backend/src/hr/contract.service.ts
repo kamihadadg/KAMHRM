@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contract, ContractStatus } from './entities/contract.entity';
 import { CreateContractDto } from './dto/create-contract.dto';
+import { PaginationQuery, PaginatedResponse } from '../shared/interfaces/pagination.interface';
 
 @Injectable()
 export class ContractService {
@@ -19,8 +20,52 @@ export class ContractService {
         return this.contractRepository.save(contract);
     }
 
-    async findAll(): Promise<Contract[]> {
-        return this.contractRepository.find({ relations: ['user', 'assignments'] });
+    async findAll(query: PaginationQuery = {}): Promise<PaginatedResponse<Contract>> {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'DESC'
+        } = query;
+
+        const queryBuilder = this.contractRepository.createQueryBuilder('contract')
+            .leftJoinAndSelect('contract.user', 'user')
+            .leftJoinAndSelect('contract.assignments', 'assignments');
+
+        // Apply search filter
+        if (search) {
+            queryBuilder.andWhere(
+                '(contract.title LIKE :search OR contract.description LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)',
+                { search: `%${search}%` }
+            );
+        }
+
+        // Apply sorting
+        queryBuilder.orderBy(`contract.${sortBy}`, sortOrder);
+
+        // Get total count
+        const total = await queryBuilder.getCount();
+
+        // Apply pagination
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        const contracts = await queryBuilder.getMany();
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: contracts,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
+        };
     }
 
     async findOne(id: string): Promise<Contract> {

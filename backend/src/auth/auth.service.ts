@@ -15,6 +15,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
+import { PaginationQuery, PaginatedResponse } from '../shared/interfaces/pagination.interface';
 
 @Injectable()
 export class AuthService {
@@ -156,11 +157,52 @@ export class AuthService {
     return this.userRepository.save(user);
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return this.userRepository.find({
-      relations: ['manager', 'subordinates'],
-      order: { createdAt: 'DESC' },
-    });
+  async getAllUsers(query: PaginationQuery = {}): Promise<PaginatedResponse<User>> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC'
+    } = query;
+
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.manager', 'manager')
+      .leftJoinAndSelect('user.subordinates', 'subordinates');
+
+    // Apply search filter
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.firstName LIKE :search OR user.lastName LIKE :search OR user.username LIKE :search OR user.employeeId LIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Apply sorting
+    queryBuilder.orderBy(`user.${sortBy}`, sortOrder);
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Apply pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const users = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: users,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
 
   async getUserById(id: string): Promise<User> {
@@ -225,11 +267,52 @@ export class AuthService {
     return this.positionRepository.save(position);
   }
 
-  async getAllPositions(): Promise<Position[]> {
-    return this.positionRepository.find({
-      relations: ['parentPosition', 'childPositions'],
-      order: { order: 'ASC', title: 'ASC' },
-    });
+  async getAllPositions(query: PaginationQuery = {}): Promise<PaginatedResponse<Position>> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'order',
+      sortOrder = 'ASC'
+    } = query;
+
+    const queryBuilder = this.positionRepository.createQueryBuilder('position')
+      .leftJoinAndSelect('position.parentPosition', 'parentPosition')
+      .leftJoinAndSelect('position.childPositions', 'childPositions');
+
+    // Apply search filter
+    if (search) {
+      queryBuilder.andWhere(
+        '(position.title LIKE :search OR position.description LIKE :search OR position.department LIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Apply sorting
+    queryBuilder.orderBy(`position.${sortBy}`, sortOrder);
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Apply pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const positions = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: positions,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
 
   async getPositionById(id: string): Promise<Position> {

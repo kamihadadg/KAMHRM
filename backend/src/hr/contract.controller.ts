@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, Patch, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Put, Delete, Query } from '@nestjs/common';
 import { ContractService } from './contract.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { ContractStatus } from './entities/contract.entity';
+import type { PaginationQuery } from '../shared/interfaces/pagination.interface';
 
 @Controller('hr/contracts')
 export class ContractController {
@@ -13,8 +14,8 @@ export class ContractController {
     }
 
     @Get()
-    findAll() {
-        return this.contractService.findAll();
+    findAll(@Query() query: PaginationQuery) {
+        return this.contractService.findAll(query);
     }
 
     @Get(':id')

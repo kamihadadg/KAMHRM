@@ -13,6 +13,7 @@ import { EmployeeProfileService } from './employee-profile.service';
 import { CreateEmployeeProfileDto } from './dto/create-employee-profile.dto';
 import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import type { PaginationQuery } from '../shared/interfaces/pagination.interface';
 
 @Controller('hr/employee-profiles')
 @UseGuards(JwtAuthGuard)
@@ -25,14 +26,18 @@ export class EmployeeProfileController {
     }
 
     @Get()
-    findAll(@Query('department') department?: string, @Query('active') active?: string) {
+    findAll(
+        @Query() query: PaginationQuery,
+        @Query('department') department?: string,
+        @Query('active') active?: string
+    ) {
         if (department) {
             return this.employeeProfileService.findByDepartment(department);
         }
         if (active === 'true') {
             return this.employeeProfileService.findActiveEmployees();
         }
-        return this.employeeProfileService.findAll();
+        return this.employeeProfileService.findAll(query);
     }
 
     @Get(':id')

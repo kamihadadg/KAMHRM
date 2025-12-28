@@ -32,10 +32,34 @@ const OrgNode = ({ data }: any) => {
     const mainEmployee = data.employees && data.employees.length > 0 ? data.employees[0] : null;
     const isAggregate = data.isAggregate;
     const employeeCount = data.employees?.length || 0;
+    const isCollapsed = data.isCollapsed;
+    const hasChildren = data.hasChildren;
+    const onToggleCollapse = data.onToggleCollapse;
 
     return (
-        <div className={`px-2 py-2 shadow-lg rounded-2xl bg-white border-2 transition-all duration-200 ${data.isDraggingOver ? 'border-blue-500 bg-blue-50 scale-105 shadow-blue-200' : 'border-gray-100'} min-w-[160px] cursor-pointer react-flow__draghandle`}>
+        <div className={`px-2 py-2 shadow-lg rounded-2xl bg-white border-2 transition-all duration-200 ${data.isDraggingOver ? 'border-blue-500 bg-blue-50 scale-105 shadow-blue-200' : 'border-gray-100'} min-w-[160px] cursor-pointer react-flow__draghandle relative`}>
             <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-blue-400 border-2 border-white" />
+
+            {/* Collapse/Expand Button */}
+            {hasChildren && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleCollapse();
+                    }}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-all duration-200 hover:scale-110 z-10"
+                    title={isCollapsed ? 'باز کردن' : 'بستن'}
+                >
+                    <svg
+                        className={`w-3 h-3 transition-transform duration-200 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            )}
 
             <div className="flex flex-col items-center pointer-events-none">
                 {isAggregate ? (
@@ -192,6 +216,7 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
     const [selectedNodeData, setSelectedNodeData] = React.useState<any>(null);
     const [selectedEmployeeInAggregate, setSelectedEmployeeInAggregate] = React.useState<any>(null);
     const [isFullScreen, setIsFullScreen] = React.useState(false);
+    const [collapsedNodes, setCollapsedNodes] = React.useState<Set<string>>(new Set());
     const containerRef = React.useRef<HTMLDivElement>(null);
     const { getNodes, project, fitView } = useReactFlow();
 
@@ -205,6 +230,18 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
         } else {
             document.exitFullscreen();
         }
+    }, []);
+
+    const toggleCollapse = useCallback((nodeId: string) => {
+        setCollapsedNodes(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(nodeId)) {
+                newSet.delete(nodeId);
+            } else {
+                newSet.add(nodeId);
+            }
+            return newSet;
+        });
     }, []);
 
     useEffect(() => {
@@ -222,10 +259,16 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
         const rawEdges: Edge[] = [];
         let hasSavedPositions = false;
 
-        const traverse = (item: any) => {
+        const traverse = (item: any, isVisible = true) => {
+            if (!isVisible) return;
+
             if (item.x !== null && item.y !== null && item.x !== undefined && item.y !== undefined) {
                 hasSavedPositions = true;
             }
+
+            const isCollapsed = collapsedNodes.has(item.id);
+            const hasChildren = item.children && item.children.length > 0;
+
             rawNodes.push({
                 id: item.id,
                 type: 'orgNode',
@@ -234,7 +277,10 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
                     employees: item.employees,
                     description: item.description,
                     isAggregate: item.isAggregate,
-                    isDraggingOver: false
+                    isDraggingOver: false,
+                    isCollapsed,
+                    hasChildren,
+                    onToggleCollapse: () => toggleCollapse(item.id),
                 },
                 position: { x: item.x || 0, y: item.y || 0 },
                 width: nodeWidth,
@@ -242,7 +288,7 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
                 draggable: !readOnly,
             });
 
-            if (item.children) {
+            if (item.children && !isCollapsed) {
                 item.children.forEach((child: any) => {
                     rawEdges.push({
                         id: `e-${item.id}-${child.id}`,
@@ -256,7 +302,7 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
                             color: '#3b82f6',
                         },
                     });
-                    traverse(child);
+                    traverse(child, true);
                 });
             }
         };
@@ -281,13 +327,19 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
         setTimeout(() => {
             fitView({ padding: 0.2, duration: 800 });
         }, 50);
-    }, [data, setNodes, setEdges, direction, fitView]);
+    }, [data, setNodes, setEdges, direction, fitView, collapsedNodes, toggleCollapse]);
 
     useEffect(() => {
         if (data && data.length > 0) {
             initializeChart();
         }
     }, [data, initializeChart]);
+
+    useEffect(() => {
+        if (data && data.length > 0) {
+            initializeChart();
+        }
+    }, [collapsedNodes, initializeChart]);
 
     const onLayoutChange = useCallback((newDir: 'TB' | 'LR' | 'RL') => {
         setDirection(newDir);

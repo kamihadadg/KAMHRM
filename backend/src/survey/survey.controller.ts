@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Ip, Query, Delete } from '@nestjs/c
 import { SurveyService } from './survey.service';
 import { CreateSurveyDto } from './dto/create-survey.dto';
 import { SubmitResponseDto } from './dto/submit-response.dto';
+import type { PaginationQuery } from '../shared/interfaces/pagination.interface';
 
 @Controller('surveys')
 export class SurveyController {
@@ -13,8 +14,8 @@ export class SurveyController {
   }
 
   @Get()
-  getAllSurveys() {
-    return this.surveyService.getAllSurveys();
+  getAllSurveys(@Query() query: PaginationQuery) {
+    return this.surveyService.getAllSurveys(query);
   }
 
   @Get('active')

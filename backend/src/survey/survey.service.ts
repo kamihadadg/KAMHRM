@@ -7,6 +7,7 @@ import { Response } from './entities/response.entity';
 import { User } from './entities/user.entity';
 import { CreateSurveyDto } from './dto/create-survey.dto';
 import { SubmitResponseDto } from './dto/submit-response.dto';
+import { PaginationQuery, PaginatedResponse } from '../shared/interfaces/pagination.interface';
 
 @Injectable()
 export class SurveyService {
@@ -49,11 +50,51 @@ export class SurveyService {
     });
   }
 
-  async getAllSurveys(): Promise<Survey[]> {
-    return this.surveyRepository.find({
-      relations: ['questions'],
-      order: { createdAt: 'DESC' },
-    });
+  async getAllSurveys(query: PaginationQuery = {}): Promise<PaginatedResponse<Survey>> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC'
+    } = query;
+
+    const queryBuilder = this.surveyRepository.createQueryBuilder('survey')
+      .leftJoinAndSelect('survey.questions', 'questions');
+
+    // Apply search filter
+    if (search) {
+      queryBuilder.andWhere(
+        '(survey.title LIKE :search OR survey.description LIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Apply sorting
+    queryBuilder.orderBy(`survey.${sortBy}`, sortOrder);
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Apply pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const surveys = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: surveys,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
 
   async deleteSurvey(id: string): Promise<void> {

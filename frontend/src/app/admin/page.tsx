@@ -30,6 +30,7 @@ import ContractFormModal from '@/components/ContractFormModal';
 import AssignmentFormModal from '@/components/AssignmentFormModal';
 import EmployeeProfileFormModal from '@/components/EmployeeProfileFormModal';
 import { Survey } from '@/types/survey';
+import { seedTestData, clearTestData, getSeederStats } from '@/lib/api';
 
 interface User {
   id: string;
@@ -53,7 +54,7 @@ interface User {
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'users' | 'positions' | 'org-chart' | 'surveys' | 'contracts' | 'employees'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'positions' | 'org-chart' | 'surveys' | 'contracts' | 'employees' | 'performance' | 'seeder'>('users');
   const [users, setUsers] = useState<User[]>([]);
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
@@ -76,6 +77,10 @@ export default function AdminPage() {
   const [editingContract, setEditingContract] = useState<any | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<any | null>(null);
   const [editingEmployeeProfile, setEditingEmployeeProfile] = useState<any | null>(null);
+
+  // Seeder State
+  const [seederStats, setSeederStats] = useState<any>(null);
+  const [seederLoading, setSeederLoading] = useState(false);
 
   // Search & Pagination for ALL sections
   const [userSearch, setUserSearch] = useState('');
@@ -119,31 +124,79 @@ export default function AdminPage() {
     loadData();
   }, []);
 
+  const loadSeederStats = async () => {
+    try {
+      const stats = await getSeederStats();
+      setSeederStats(stats.data);
+    } catch (error) {
+      console.error('Error loading seeder stats:', error);
+    }
+  };
+
   const loadData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [usersData, positionsData, orgChartData, flatPositionsData, surveysData, contractsData, assignmentsData, employeeProfilesData] = await Promise.all([
-        getAllUsers(),
-        getAllPositions(),
+      const [usersResponse, positionsResponse, orgChartData, flatPositionsData, surveysResponse, contractsResponse, assignmentsResponse, employeeProfilesResponse] = await Promise.all([
+        getAllUsers({ limit: 1000 }), // Load more users for admin
+        getAllPositions({ limit: 1000 }), // Load more positions for admin
         getOrganizationalChart(),
         getAllPositionsFlat(),
-        getAllSurveys(),
-        getAllContracts(),
-        getAllAssignments(),
-        getAllEmployeeProfiles(),
+        getAllSurveys({ limit: 1000 }), // Load more surveys for admin
+        getAllContracts({ limit: 1000 }), // Load more contracts for admin
+        getAllAssignments({ limit: 1000 }), // Load more assignments for admin
+        getAllEmployeeProfiles({ limit: 1000 }), // Load more profiles for admin
       ]);
-      setUsers(usersData);
-      setPositions(positionsData);
+      setUsers(usersResponse.data);
+      setPositions(positionsResponse.data);
       setOrgChart(orgChartData);
       setFlatPositions(flatPositionsData);
-      setSurveys(surveysData || []);
-      setContracts(contractsData || []);
-      setAssignments(assignmentsData || []);
-      setEmployeeProfiles(employeeProfilesData || []);
+      setSurveys(surveysResponse.data);
+      setContracts(contractsResponse.data);
+      setAssignments(assignmentsResponse.data);
+      setEmployeeProfiles(employeeProfilesResponse.data);
+
+      // Load seeder stats
+      await loadSeederStats();
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       if (!silent) setLoading(false);
+    }
+  };
+
+  const handleSeedData = async () => {
+    if (!confirm('آیا مطمئن هستید که می‌خواهید داده‌های تستی ایجاد کنید؟ این عملیات ممکن است کمی زمان‌بر باشد.')) {
+      return;
+    }
+
+    setSeederLoading(true);
+    try {
+      await seedTestData();
+      alert('داده‌های تستی با موفقیت ایجاد شد!');
+      await loadData(true); // Reload all data
+    } catch (error: any) {
+      console.error('Error seeding data:', error);
+      alert(`خطا در ایجاد داده‌های تستی: ${error.message}`);
+    } finally {
+      setSeederLoading(false);
+    }
+  };
+
+  const handleClearData = async () => {
+    if (!confirm('آیا مطمئن هستید که می‌خواهید تمام داده‌های تستی را پاک کنید؟ این عملیات قابل بازگشت نیست!')) {
+      return;
+    }
+
+    setSeederLoading(true);
+    try {
+      await clearTestData();
+      alert('داده‌های تستی با موفقیت پاک شد!');
+      await loadData(true); // Reload all data
+    } catch (error: any) {
+      console.error('Error clearing data:', error);
+      alert(`خطا در پاک کردن داده‌های تستی: ${error.message}`);
+    } finally {
+      setSeederLoading(false);
     }
   };
 
@@ -315,6 +368,24 @@ export default function AdminPage() {
                   }`}
               >
                 مدیریت پرسنل ({employeeProfiles.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('performance')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'performance'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                ارزیابی عملکرد
+              </button>
+              <button
+                onClick={() => setActiveTab('seeder')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'seeder'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                مدیریت داده‌ها
               </button>
             </nav>
           </div>
@@ -1400,6 +1471,138 @@ export default function AdminPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Performance Tab */}
+      {activeTab === 'performance' && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                مدیریت ارزیابی عملکرد
+              </h3>
+              <div className="flex gap-2">
+                <Link href="/performance" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  مشاهده عملکرد من
+                </Link>
+              </div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    ارزیابی عملکرد 360 درجه
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>
+                      این بخش برای مدیریت ارزیابی‌های عملکردی سازمان طراحی شده است.
+                      برای مشاهده و مدیریت ارزیابی‌های خود، از لینک بالا استفاده کنید.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="text-center py-12">
+              <div className="text-gray-500">
+                <p className="text-lg">ارزیابی عملکرد در دست توسعه</p>
+                <p className="text-sm mt-2">این قابلیت به زودی اضافه خواهد شد.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Seeder Tab */}
+      {activeTab === 'seeder' && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  مدیریت داده‌های تستی
+                </h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  ایجاد و پاک کردن داده‌های آزمایشی برای تست سیستم
+                </p>
+              </div>
+            </div>
+
+            {/* Statistics */}
+            {seederStats && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{seederStats.positions}</div>
+                  <div className="text-sm text-blue-800">سمت‌ها</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{seederStats.users}</div>
+                  <div className="text-sm text-green-800">کاربران</div>
+                </div>
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600">{seederStats.profiles}</div>
+                  <div className="text-sm text-yellow-800">پروفایل‌ها</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">{seederStats.goals}</div>
+                  <div className="text-sm text-purple-800">اهداف</div>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{seederStats.evaluations}</div>
+                  <div className="text-sm text-red-800">ارزیابی‌ها</div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="text-md font-medium text-green-800 mb-2">
+                  ایجاد داده‌های تستی
+                </h4>
+                <p className="text-sm text-green-700 mb-4">
+                  این عملیات 100 پرسنل، 20 سمت، اهداف عملکردی و ارزیابی‌های نمونه ایجاد می‌کند.
+                </p>
+                <button
+                  onClick={handleSeedData}
+                  disabled={seederLoading}
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {seederLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                  ایجاد داده‌های تستی
+                </button>
+              </div>
+
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="text-md font-medium text-red-800 mb-2">
+                  پاک کردن داده‌های تستی
+                </h4>
+                <p className="text-sm text-red-700 mb-4">
+                  این عملیات تمام داده‌های تستی را پاک می‌کند. این عملیات قابل بازگشت نیست!
+                </p>
+                <button
+                  onClick={handleClearData}
+                  disabled={seederLoading}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {seederLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                  پاک کردن داده‌های تستی
+                </button>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-md font-medium text-blue-800 mb-2">
+                  اطلاعات مفید
+                </h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• کاربران تستی: نام کاربری user001 تا user100، رمز عبور: password123</li>
+                  <li>• داده‌های تستی با پیشوند "تستی" یا "نمونه" مشخص می‌شوند</li>
+                  <li>• عملیات seeding ممکن است چند دقیقه طول بکشد</li>
+                  <li>• همیشه ابتدا داده‌ها را backup بگیرید</li>
+                </ul>
               </div>
             </div>
           </div>

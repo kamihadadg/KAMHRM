@@ -5,6 +5,7 @@ import { EmployeeProfile } from './entities/employee-profile.entity';
 import { User } from '../survey/entities/user.entity';
 import { CreateEmployeeProfileDto } from './dto/create-employee-profile.dto';
 import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
+import { PaginationQuery, PaginatedResponse } from '../shared/interfaces/pagination.interface';
 
 @Injectable()
 export class EmployeeProfileService {
@@ -59,11 +60,51 @@ export class EmployeeProfileService {
         return this.findOne(savedProfile.id);
     }
 
-    async findAll(): Promise<EmployeeProfile[]> {
-        return this.employeeProfileRepository.find({
-            relations: ['user'],
-            order: { createdAt: 'DESC' },
-        });
+    async findAll(query: PaginationQuery = {}): Promise<PaginatedResponse<EmployeeProfile>> {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'DESC'
+        } = query;
+
+        const queryBuilder = this.employeeProfileRepository.createQueryBuilder('profile')
+            .leftJoinAndSelect('profile.user', 'user');
+
+        // Apply search filter
+        if (search) {
+            queryBuilder.andWhere(
+                '(profile.nationalId LIKE :search OR profile.employeeNumber LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR profile.phone LIKE :search)',
+                { search: `%${search}%` }
+            );
+        }
+
+        // Apply sorting
+        queryBuilder.orderBy(`profile.${sortBy}`, sortOrder);
+
+        // Get total count
+        const total = await queryBuilder.getCount();
+
+        // Apply pagination
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        const profiles = await queryBuilder.getMany();
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: profiles,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
+        };
     }
 
     async findOne(id: string): Promise<EmployeeProfile> {

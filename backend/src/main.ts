@@ -16,7 +16,8 @@ async function bootstrap() {
     const authService = app.get(AuthService);
 
     // Check if any users exist
-    const existingUsers = await authService.getAllUsers();
+    const existingUsersResponse = await authService.getAllUsers();
+    const existingUsers = existingUsersResponse.data;
 
     if (existingUsers.length === 0) {
       console.log('🔍 No users found in database. Creating default admin user...');
@@ -46,7 +47,7 @@ async function bootstrap() {
         console.error('❌ Error creating default admin user:', error);
       }
     } else {
-      console.log(`✅ Found ${existingUsers.length} existing users in database.`);
+      console.log(`✅ Found ${existingUsersResponse.meta.total} existing users in database.`);
     }
   } catch (error) {
     console.error('❌ Error checking for existing users:', error);

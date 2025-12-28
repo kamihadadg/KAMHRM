@@ -22,6 +22,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserRole } from '../survey/entities/user.entity';
+import type { PaginationQuery } from '../shared/interfaces/pagination.interface';
+import { Query } from '@nestjs/common';
 
 // Multer config for profile image upload
 const profileImageStorage = diskStorage({
@@ -73,12 +75,15 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('admin/users')
-  async getAllUsers(@Request() req) {
+  async getAllUsers(
+    @Request() req,
+    @Query() query: PaginationQuery
+  ) {
     // Check if user is admin
     if (req.user.role !== UserRole.ADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
-    return this.authService.getAllUsers();
+    return this.authService.getAllUsers(query);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -132,12 +137,15 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('admin/positions')
-  async getAllPositions(@Request() req) {
+  async getAllPositions(
+    @Request() req,
+    @Query() query: PaginationQuery
+  ) {
     // Check if user is admin
     if (req.user.role !== UserRole.ADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
-    return this.authService.getAllPositions();
+    return this.authService.getAllPositions(query);
   }
 
   @UseGuards(JwtAuthGuard)

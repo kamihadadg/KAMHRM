@@ -2,6 +2,28 @@ import { Survey, SurveyResponse, SurveyResults } from '@/types/survey';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.112:3080';
 
+export interface PaginationQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 export async function getActiveSurveys(): Promise<Survey[]> {
   const response = await fetch(`${API_BASE_URL}/surveys/active`);
   if (!response.ok) {
@@ -84,9 +106,17 @@ export async function getCommentCount(): Promise<number> {
 }
 
 // Admin API functions
-export async function getAllUsers(): Promise<any[]> {
+export async function getAllUsers(query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/auth/admin/users`, {
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/auth/admin/users?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -98,9 +128,17 @@ export async function getAllUsers(): Promise<any[]> {
 }
 
 // Surveys Management
-export async function getAllSurveys(): Promise<Survey[]> {
+export async function getAllSurveys(query: PaginationQuery = {}): Promise<PaginatedResponse<Survey>> {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/surveys`, {
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/surveys?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -189,9 +227,17 @@ export async function deleteUser(userId: string): Promise<void> {
 
 
 // Position management API functions
-export async function getAllPositions(): Promise<any[]> {
+export async function getAllPositions(query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/auth/admin/positions`, {
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/auth/admin/positions?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -334,9 +380,17 @@ export async function getOrganizationalChart(): Promise<any[]> {
 // HR Module API Functions
 
 // Contracts
-export async function getAllContracts(): Promise<any[]> {
+export async function getAllContracts(query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/hr/contracts`, {
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/hr/contracts?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -381,9 +435,17 @@ export async function updateContractStatus(id: string, status: string): Promise<
 }
 
 // Assignments
-export async function getAllAssignments(): Promise<any[]> {
+export async function getAllAssignments(query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/hr/assignments`, {
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/hr/assignments?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -482,9 +544,17 @@ export async function deleteAssignment(id: string): Promise<void> {
 }
 
 // Employee Profile APIs
-export async function getAllEmployeeProfiles(): Promise<any[]> {
+export async function getAllEmployeeProfiles(query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles`, {
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -569,4 +639,262 @@ export async function deleteEmployeeProfile(id: string): Promise<void> {
     const error = await response.json();
     throw new Error(error.message || 'Failed to delete employee profile');
   }
+}
+
+// Performance Evaluations API
+
+export async function createPerformanceEvaluation(evaluationData: any): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/evaluations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(evaluationData),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create performance evaluation');
+  }
+  return response.json();
+}
+
+export async function getAllPerformanceEvaluations(
+  query: PaginationQuery = {},
+  employeeId?: string,
+  evaluatorId?: string
+): Promise<PaginatedResponse<any>> {
+  const token = localStorage.getItem('auth_token');
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+  if (employeeId) params.append('employeeId', employeeId);
+  if (evaluatorId) params.append('evaluatorId', evaluatorId);
+
+  const response = await fetch(`${API_BASE_URL}/hr/performance/evaluations?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch performance evaluations');
+  }
+  return response.json();
+}
+
+export async function getPerformanceEvaluationById(id: string): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/evaluations/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch performance evaluation');
+  }
+  return response.json();
+}
+
+export async function updatePerformanceEvaluation(id: string, evaluationData: any): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/evaluations/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(evaluationData),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update performance evaluation');
+  }
+  return response.json();
+}
+
+export async function deletePerformanceEvaluation(id: string): Promise<void> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/evaluations/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete performance evaluation');
+  }
+}
+
+export async function getEmployeeEvaluations(employeeId: string, period?: string): Promise<any[]> {
+  const token = localStorage.getItem('auth_token');
+  const params = new URLSearchParams();
+  if (period) params.append('period', period);
+
+  const response = await fetch(`${API_BASE_URL}/hr/performance/employees/${employeeId}/evaluations?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch employee evaluations');
+  }
+  return response.json();
+}
+
+export async function getEvaluationStatistics(employeeId: string): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/employees/${employeeId}/statistics`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch evaluation statistics');
+  }
+  return response.json();
+}
+
+// Performance Goals API
+
+export async function createPerformanceGoal(goalData: any): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/goals`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(goalData),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create performance goal');
+  }
+  return response.json();
+}
+
+export async function getAllPerformanceGoals(
+  query: PaginationQuery = {},
+  employeeId?: string,
+  status?: string
+): Promise<PaginatedResponse<any>> {
+  const token = localStorage.getItem('auth_token');
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+  if (employeeId) params.append('employeeId', employeeId);
+  if (status) params.append('status', status);
+
+  const response = await fetch(`${API_BASE_URL}/hr/performance/goals?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch performance goals');
+  }
+  return response.json();
+}
+
+export async function getPerformanceGoalById(id: string): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/goals/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch performance goal');
+  }
+  return response.json();
+}
+
+export async function updatePerformanceGoal(id: string, goalData: any): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/goals/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(goalData),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update performance goal');
+  }
+  return response.json();
+}
+
+export async function deletePerformanceGoal(id: string): Promise<void> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/goals/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete performance goal');
+  }
+}
+
+// Seeder API Functions
+
+export async function seedTestData(): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/seeder/seed`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to seed test data');
+  }
+  return response.json();
+}
+
+export async function clearTestData(): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/seeder/clear`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to clear test data');
+  }
+  return response.json();
+}
+
+export async function getSeederStats(): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/seeder/stats`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to get seeder stats');
+  }
+  return response.json();
 }

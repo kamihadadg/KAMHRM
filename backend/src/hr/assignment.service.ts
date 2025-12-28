@@ -6,6 +6,7 @@ import { Contract } from './entities/contract.entity';
 import { Position } from '../survey/entities/position.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { PaginationQuery, PaginatedResponse } from '../shared/interfaces/pagination.interface';
 
 @Injectable()
 export class AssignmentService {
@@ -62,10 +63,53 @@ export class AssignmentService {
         return savedAssignment;
     }
 
-    async findAll(): Promise<Assignment[]> {
-        return this.assignmentRepository.find({
-            relations: ['contract', 'contract.user', 'position'],
-        });
+    async findAll(query: PaginationQuery = {}): Promise<PaginatedResponse<Assignment>> {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'DESC'
+        } = query;
+
+        const queryBuilder = this.assignmentRepository.createQueryBuilder('assignment')
+            .leftJoinAndSelect('assignment.contract', 'contract')
+            .leftJoinAndSelect('assignment.position', 'position')
+            .leftJoinAndSelect('contract.user', 'user');
+
+        // Apply search filter
+        if (search) {
+            queryBuilder.andWhere(
+                '(position.title LIKE :search OR contract.title LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)',
+                { search: `%${search}%` }
+            );
+        }
+
+        // Apply sorting
+        queryBuilder.orderBy(`assignment.${sortBy}`, sortOrder);
+
+        // Get total count
+        const total = await queryBuilder.getCount();
+
+        // Apply pagination
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        const assignments = await queryBuilder.getMany();
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: assignments,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
+        };
     }
 
     async findOne(id: string): Promise<Assignment> {

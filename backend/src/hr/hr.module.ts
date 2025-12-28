@@ -13,8 +13,15 @@ import { ContractService } from './contract.service';
 import { AssignmentService } from './assignment.service';
 import { EmployeeProfileService } from './employee-profile.service';
 
+import { PerformanceModule } from './performance.module';
+import { SeederModule } from './seeder.module';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([Contract, Assignment, EmployeeProfile, Position, User])],
+    imports: [
+        TypeOrmModule.forFeature([Contract, Assignment, EmployeeProfile, Position, User]),
+        PerformanceModule,
+        SeederModule,
+    ],
     controllers: [ContractController, AssignmentController, EmployeeProfileController],
     providers: [ContractService, AssignmentService, EmployeeProfileService],
     exports: [TypeOrmModule, ContractService, AssignmentService, EmployeeProfileService],
