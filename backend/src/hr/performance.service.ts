@@ -534,6 +534,29 @@ export class PerformanceService {
         return cycle;
     }
 
+    /**
+     * تبدیل تاریخ به Date object
+     * TypeORM ممکن است تاریخ‌های date را به صورت string برگرداند
+     */
+    private ensureDate(date: Date | string | any): Date {
+        if (date instanceof Date) {
+            return date;
+        }
+        if (typeof date === 'string') {
+            const d = new Date(date);
+            if (isNaN(d.getTime())) {
+                throw new BadRequestException(`Invalid date string: ${date}`);
+            }
+            return d;
+        }
+        // برای سایر انواع
+        const d = new Date(date);
+        if (isNaN(d.getTime())) {
+            throw new BadRequestException(`Invalid date: ${date} (type: ${typeof date})`);
+        }
+        return d;
+    }
+
     async publishCycle(cycleId: string, publishDto: PublishEvaluationCycleDto, publishedById: string): Promise<{ cycle: EvaluationCycle; evaluationsCreated: number }> {
         console.log('[PerformanceService] Publishing cycle:', cycleId);
 
@@ -543,13 +566,15 @@ export class PerformanceService {
             throw new BadRequestException('Cannot publish a closed cycle');
         }
 
-        // اگر قبلاً منتشر شده، باید از republish استفاده شود
-        // اما برای اینکه republishCycle بتواند از این متد استفاده کند، این چک را حذف می‌کنیم
-        // و بررسی را در controller انجام می‌دهیم
-
         // تبدیل تاریخ‌ها به Date object (اگر string هستند)
-        const startDate = cycle.startDate instanceof Date ? cycle.startDate : new Date(cycle.startDate);
-        const endDate = cycle.endDate instanceof Date ? cycle.endDate : new Date(cycle.endDate);
+        // TypeORM ممکن است تاریخ‌های date را به صورت string برگرداند
+        const startDate = this.ensureDate(cycle.startDate);
+        const endDate = this.ensureDate(cycle.endDate);
+        
+        console.log('[PerformanceService] Converted dates:', {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+        });
 
         // دریافت لیست پرسنل بر اساس چارت سازمانی
         let targetEmployees: User[];
