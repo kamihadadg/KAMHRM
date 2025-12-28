@@ -33,11 +33,18 @@ export default function AssignmentFormModal({ onClose, onSave, contracts, positi
                 workloadPercentage: Number(formData.workloadPercentage),
             };
 
+            console.log('🔄 AssignmentFormModal - Submitting data:', submitData);
+            console.log('📝 AssignmentFormModal - Original assignment:', assignment);
+            console.log('🔍 AssignmentFormModal - Position changed:', formData.positionId !== assignment?.positionId);
+            console.log('🔍 AssignmentFormModal - Contract changed:', formData.contractId !== assignment?.contractId);
+
             if (assignment) {
                 // Update existing assignment
+                console.log('✏️ AssignmentFormModal - Updating assignment:', assignment.id);
                 await updateAssignment(assignment.id, submitData);
             } else {
                 // Create new assignment
+                console.log('➕ AssignmentFormModal - Creating new assignment');
                 await createAssignment(submitData);
             }
             onSave();

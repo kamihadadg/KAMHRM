@@ -442,6 +442,8 @@ export async function deleteContract(id: string): Promise<void> {
 }
 
 export async function updateAssignment(id: string, assignmentData: any): Promise<any> {
+  console.log('🚀 API - updateAssignment called with:', { id, assignmentData });
+
   const token = localStorage.getItem('auth_token');
   const response = await fetch(`${API_BASE_URL}/hr/assignments/${id}`, {
     method: 'PUT',
@@ -451,11 +453,19 @@ export async function updateAssignment(id: string, assignmentData: any): Promise
     },
     body: JSON.stringify(assignmentData),
   });
+
+  console.log('📡 API - Response status:', response.status);
+  console.log('📡 API - Response ok:', response.ok);
+
   if (!response.ok) {
     const error = await response.json();
+    console.error('❌ API - Error response:', error);
     throw new Error(error.message || 'Failed to update assignment');
   }
-  return response.json();
+
+  const result = await response.json();
+  console.log('✅ API - Success response:', result);
+  return result;
 }
 
 export async function deleteAssignment(id: string): Promise<void> {

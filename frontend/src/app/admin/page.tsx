@@ -741,7 +741,10 @@ export default function AdminPage() {
         {showSurveyForm && (
           <SurveyFormModal
             onClose={() => setShowSurveyForm(false)}
-            onSave={() => loadData(true)}
+            onSave={() => {
+            console.log('🔄 AdminPage - Assignment onSave triggered');
+            loadData(true);
+          }}
           />
         )}
         {/* Contracts Tab */}
@@ -971,7 +974,7 @@ export default function AdminPage() {
             </div>
 
             {/* Users Tab */}
-            {activeTab === 'users' && (
+            {(activeTab as any) === 'users' && (
               <div className="bg-white shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex justify-between items-center mb-4">
@@ -1236,7 +1239,10 @@ export default function AdminPage() {
             setShowContractForm(false);
             setEditingContract(null);
           }}
-          onSave={() => loadData(true)}
+          onSave={() => {
+            console.log('🔄 AdminPage - Assignment onSave triggered');
+            loadData(true);
+          }}
           users={users}
           contract={editingContract}
         />
@@ -1248,7 +1254,10 @@ export default function AdminPage() {
             setShowAssignmentForm(false);
             setEditingAssignment(null);
           }}
-          onSave={() => loadData(true)}
+          onSave={() => {
+            console.log('🔄 AdminPage - Assignment onSave triggered');
+            loadData(true);
+          }}
           contracts={contracts}
           positions={positions}
           assignment={editingAssignment}

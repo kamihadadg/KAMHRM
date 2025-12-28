@@ -31,7 +31,7 @@ export default function UserFormModal({ user, users, positions, onClose, onSave 
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     password: '',
-    managerId: user?.managerId || '',
+    managerId: user?.manager?.id || '',
     role: user?.role || 'EMPLOYEE',
     profileImageUrl: user?.profileImageUrl || '',
   });
@@ -107,8 +107,8 @@ export default function UserFormModal({ user, users, positions, onClose, onSave 
         }
       }
 
-      // Remove positionId from submit data - it's managed via Assignments now
-      const { positionId, ...submitData } = {
+      // Prepare submit data
+      const submitData = {
         ...formData,
         profileImageUrl,
       };

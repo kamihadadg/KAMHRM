@@ -2,6 +2,14 @@ import { IsString, IsDateString, IsNumber, IsBoolean, IsOptional, IsUUID, Min, M
 
 export class UpdateAssignmentDto {
     @IsOptional()
+    @IsString()
+    contractId?: string;
+
+    @IsOptional()
+    @IsString()
+    positionId?: string;
+
+    @IsOptional()
     @IsDateString()
     startDate?: Date;
 
