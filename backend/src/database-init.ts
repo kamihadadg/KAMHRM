@@ -1,11 +1,7 @@
 import { Client } from 'pg';
 
 export async function createDatabaseIfNotExists(): Promise<void> {
-  // Only create database if explicitly requested
-  if (process.env.CREATE_DB !== 'true') {
-    console.log('⏭️  Database creation skipped (set CREATE_DB=true to create)');
-    return;
-  }
+  // Always check and create database if not exists
   const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),

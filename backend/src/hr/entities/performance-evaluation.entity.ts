@@ -9,6 +9,8 @@ import {
     OneToMany,
 } from 'typeorm';
 import { User } from '../../survey/entities/user.entity';
+import { EvaluationCycle } from './evaluation-cycle.entity';
+import { EvaluationTemplate } from './evaluation-template.entity';
 
 export enum EvaluationType {
     SELF = 'SELF',           // ارزیابی خود
@@ -83,7 +85,23 @@ export class PerformanceEvaluation {
     })
     evaluationType: EvaluationType;
 
-    // دوره ارزیابی
+    // ارجاع به دوره ارزیابی
+    @Column({ nullable: true })
+    cycleId?: string;
+
+    @ManyToOne(() => EvaluationCycle, (cycle) => cycle.evaluations, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'cycleId' })
+    cycle?: EvaluationCycle;
+
+    // ارجاع به تمپلیت (برای دسترسی سریع)
+    @Column({ nullable: true })
+    templateId?: string;
+
+    @ManyToOne(() => EvaluationTemplate, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'templateId' })
+    template?: EvaluationTemplate;
+
+    // دوره ارزیابی (برای سازگاری با داده‌های قدیمی)
     @Column()
     period: string; // مثلاً '2024-Q1', '2024-Annual', '2024-Monthly'
 
@@ -93,9 +111,13 @@ export class PerformanceEvaluation {
     @Column({ type: 'date' })
     endDate: Date;
 
-    // دسته‌بندی‌های ارزیابی
+    // دسته‌بندی‌های ارزیابی (از تمپلیت کپی می‌شود)
     @Column({ type: 'json' })
     categories: EvaluationCategory[];
+
+    // آیا این ارزیابی بازنشر شده است؟
+    @Column({ default: false })
+    isRepublished: boolean;
 
     // امتیاز نهایی
     @Column({ type: 'decimal', precision: 4, scale: 2, nullable: true })

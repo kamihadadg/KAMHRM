@@ -1,13 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PerformanceEvaluation, EvaluationStatus } from './entities/performance-evaluation.entity';
+import { PerformanceEvaluation, EvaluationStatus, EvaluationType } from './entities/performance-evaluation.entity';
 import { PerformanceGoal, GoalStatus } from './entities/performance-goal.entity';
+import { EvaluationTemplate } from './entities/evaluation-template.entity';
+import { EvaluationCycle, CycleStatus } from './entities/evaluation-cycle.entity';
 import { User } from '../survey/entities/user.entity';
 import { CreatePerformanceEvaluationDto } from './dto/create-performance-evaluation.dto';
 import { UpdatePerformanceEvaluationDto } from './dto/update-performance-evaluation.dto';
 import { CreatePerformanceGoalDto } from './dto/create-performance-goal.dto';
 import { UpdatePerformanceGoalDto } from './dto/update-performance-goal.dto';
+import { CreateEvaluationTemplateDto } from './dto/create-evaluation-template.dto';
+import { CreateEvaluationCycleDto } from './dto/create-evaluation-cycle.dto';
+import { PublishEvaluationCycleDto } from './dto/publish-evaluation-cycle.dto';
+import { OrganizationHelpers } from './utils/organization-helpers';
 import { PaginationQuery, PaginatedResponse } from '../shared/interfaces/pagination.interface';
 
 @Injectable()
@@ -19,6 +25,11 @@ export class PerformanceService {
         private goalRepository: Repository<PerformanceGoal>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        @InjectRepository(EvaluationTemplate)
+        private templateRepository: Repository<EvaluationTemplate>,
+        @InjectRepository(EvaluationCycle)
+        private cycleRepository: Repository<EvaluationCycle>,
+        private organizationHelpers: OrganizationHelpers,
     ) {}
 
     // Performance Evaluations
@@ -348,6 +359,372 @@ export class PerformanceService {
             averageRating: Math.round(averageRating * 100) / 100,
             totalEvaluations: evaluations.length,
             lastEvaluationDate: lastEvaluation.createdAt,
+        };
+    }
+
+    // Evaluation Templates
+
+    async createTemplate(createDto: CreateEvaluationTemplateDto, createdById?: string): Promise<EvaluationTemplate> {
+        console.log('[PerformanceService] Creating template:', createDto);
+
+        const template = this.templateRepository.create({
+            ...createDto,
+            createdById,
+        });
+
+        const saved = await this.templateRepository.save(template);
+        console.log('[PerformanceService] Template created:', saved.id);
+
+        return this.findTemplateById(saved.id);
+    }
+
+    async findAllTemplates(query: PaginationQuery = {}): Promise<PaginatedResponse<EvaluationTemplate>> {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'DESC'
+        } = query;
+
+        const queryBuilder = this.templateRepository
+            .createQueryBuilder('template')
+            .leftJoinAndSelect('template.createdBy', 'createdBy');
+
+        if (search) {
+            queryBuilder.andWhere(
+                '(template.title LIKE :search OR template.description LIKE :search)',
+                { search: `%${search}%` }
+            );
+        }
+
+        queryBuilder.orderBy(`template.${sortBy}`, sortOrder);
+
+        const total = await queryBuilder.getCount();
+
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        const templates = await queryBuilder.getMany();
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: templates,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
+        };
+    }
+
+    async findTemplateById(id: string): Promise<EvaluationTemplate> {
+        const template = await this.templateRepository.findOne({
+            where: { id },
+            relations: ['createdBy'],
+        });
+
+        if (!template) {
+            throw new NotFoundException(`Evaluation template with ID ${id} not found`);
+        }
+
+        return template;
+    }
+
+    async updateTemplate(id: string, updateDto: Partial<CreateEvaluationTemplateDto>): Promise<EvaluationTemplate> {
+        console.log('[PerformanceService] Updating template:', id);
+
+        const template = await this.findTemplateById(id);
+        Object.assign(template, updateDto);
+        await this.templateRepository.save(template);
+
+        console.log('[PerformanceService] Template updated:', id);
+        return this.findTemplateById(id);
+    }
+
+    async deleteTemplate(id: string): Promise<void> {
+        const template = await this.findTemplateById(id);
+        await this.templateRepository.remove(template);
+        console.log(`[PerformanceService] Template ${id} deleted`);
+    }
+
+    // Evaluation Cycles
+
+    async createCycle(createDto: CreateEvaluationCycleDto): Promise<EvaluationCycle> {
+        console.log('[PerformanceService] Creating cycle:', createDto);
+
+        // Validate template exists
+        const template = await this.findTemplateById(createDto.templateId);
+        if (!template) {
+            throw new NotFoundException('Template not found');
+        }
+
+        const cycle = this.cycleRepository.create({
+            ...createDto,
+            startDate: new Date(createDto.startDate),
+            endDate: new Date(createDto.endDate),
+            submissionDeadline: createDto.submissionDeadline ? new Date(createDto.submissionDeadline) : undefined,
+        });
+
+        const saved = await this.cycleRepository.save(cycle);
+        console.log('[PerformanceService] Cycle created:', saved.id);
+
+        return this.findCycleById(saved.id);
+    }
+
+    async findAllCycles(query: PaginationQuery = {}): Promise<PaginatedResponse<EvaluationCycle>> {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'DESC'
+        } = query;
+
+        const queryBuilder = this.cycleRepository
+            .createQueryBuilder('cycle')
+            .leftJoinAndSelect('cycle.template', 'template')
+            .leftJoinAndSelect('cycle.publishedBy', 'publishedBy');
+
+        if (search) {
+            queryBuilder.andWhere(
+                '(cycle.title LIKE :search OR cycle.description LIKE :search OR template.title LIKE :search)',
+                { search: `%${search}%` }
+            );
+        }
+
+        queryBuilder.orderBy(`cycle.${sortBy}`, sortOrder);
+
+        const total = await queryBuilder.getCount();
+
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        const cycles = await queryBuilder.getMany();
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: cycles,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
+        };
+    }
+
+    async findCycleById(id: string): Promise<EvaluationCycle> {
+        const cycle = await this.cycleRepository.findOne({
+            where: { id },
+            relations: ['template', 'publishedBy'],
+        });
+
+        if (!cycle) {
+            throw new NotFoundException(`Evaluation cycle with ID ${id} not found`);
+        }
+
+        return cycle;
+    }
+
+    async publishCycle(cycleId: string, publishDto: PublishEvaluationCycleDto, publishedById: string): Promise<{ cycle: EvaluationCycle; evaluationsCreated: number }> {
+        console.log('[PerformanceService] Publishing cycle:', cycleId);
+
+        const cycle = await this.findCycleById(cycleId);
+
+        if (cycle.status === CycleStatus.PUBLISHED) {
+            throw new BadRequestException('Cycle is already published. Use republish instead.');
+        }
+
+        if (cycle.status === CycleStatus.CLOSED) {
+            throw new BadRequestException('Cannot publish a closed cycle');
+        }
+
+        // دریافت لیست پرسنل بر اساس چارت سازمانی
+        let targetEmployees: User[];
+        if (publishDto.targetEmployeeIds && publishDto.targetEmployeeIds.length > 0) {
+            // اگر لیست پرسنل مشخص شده باشد
+            targetEmployees = await this.userRepository.find({
+                where: publishDto.targetEmployeeIds.map(id => ({ id, isActive: true })),
+                relations: ['manager'],
+            });
+        } else {
+            // دریافت همه پرسنل فعال
+            const allEmployees = await this.organizationHelpers.getEmployeesByHierarchy();
+            // Load manager relations
+            targetEmployees = await this.userRepository.find({
+                where: allEmployees.map(emp => ({ id: emp.id })),
+                relations: ['manager'],
+            });
+        }
+
+        const template = await this.findTemplateById(cycle.templateId);
+        const evaluationsCreated: PerformanceEvaluation[] = [];
+
+        // ایجاد ارزیابی‌ها برای هر پرسنل و هر نوع ارزیابی
+        for (const employee of targetEmployees) {
+            for (const evaluationType of cycle.evaluationTypes) {
+                let evaluatorId: string | undefined;
+
+                switch (evaluationType) {
+                    case EvaluationType.SELF:
+                        evaluatorId = employee.id;
+                        break;
+
+                    case EvaluationType.MANAGER:
+                        if (employee.managerId) {
+                            evaluatorId = employee.managerId;
+                        } else {
+                            continue; // اگر مدیر ندارد، این نوع ارزیابی را ایجاد نکن
+                        }
+                        break;
+
+                    case EvaluationType.SUBORDINATE:
+                        // برای هر زیرمجموعه یک ارزیابی ایجاد می‌کنیم
+                        const subordinates = await this.organizationHelpers.getSubordinates(employee.id);
+                        for (const subordinate of subordinates) {
+                            const evaluation = this.evaluationRepository.create({
+                                employeeId: employee.id,
+                                evaluatorId: subordinate.id,
+                                evaluationType: EvaluationType.SUBORDINATE,
+                                cycleId: cycle.id,
+                                templateId: cycle.templateId,
+                                period: `${cycle.startDate.toISOString().split('T')[0]}_${cycle.endDate.toISOString().split('T')[0]}`,
+                                startDate: cycle.startDate,
+                                endDate: cycle.endDate,
+                                categories: JSON.parse(JSON.stringify(template.categories)), // کپی عمیق
+                                status: EvaluationStatus.DRAFT,
+                                isRepublished: false,
+                            });
+                            evaluationsCreated.push(await this.evaluationRepository.save(evaluation));
+                        }
+                        continue; // continue به loop بعدی، چون ارزیابی‌ها را ایجاد کردیم
+
+                    case EvaluationType.PEER:
+                        // برای هر هم‌ردیف یک ارزیابی ایجاد می‌کنیم
+                        const peers = await this.organizationHelpers.getPeers(employee.id);
+                        for (const peer of peers) {
+                            const evaluation = this.evaluationRepository.create({
+                                employeeId: employee.id,
+                                evaluatorId: peer.id,
+                                evaluationType: EvaluationType.PEER,
+                                cycleId: cycle.id,
+                                templateId: cycle.templateId,
+                                period: `${cycle.startDate.toISOString().split('T')[0]}_${cycle.endDate.toISOString().split('T')[0]}`,
+                                startDate: cycle.startDate,
+                                endDate: cycle.endDate,
+                                categories: JSON.parse(JSON.stringify(template.categories)), // کپی عمیق
+                                status: EvaluationStatus.DRAFT,
+                                isRepublished: false,
+                            });
+                            evaluationsCreated.push(await this.evaluationRepository.save(evaluation));
+                        }
+                        continue; // continue به loop بعدی، چون ارزیابی‌ها را ایجاد کردیم
+                }
+
+                // برای SELF و MANAGER که evaluatorId مشخص است
+                if (evaluatorId) {
+                    const evaluation = this.evaluationRepository.create({
+                        employeeId: employee.id,
+                        evaluatorId,
+                        evaluationType: evaluationType,
+                        cycleId: cycle.id,
+                        templateId: cycle.templateId,
+                        period: `${cycle.startDate.toISOString().split('T')[0]}_${cycle.endDate.toISOString().split('T')[0]}`,
+                        startDate: cycle.startDate,
+                        endDate: cycle.endDate,
+                        categories: JSON.parse(JSON.stringify(template.categories)), // کپی عمیق
+                        status: EvaluationStatus.DRAFT,
+                        isRepublished: false,
+                    });
+                    evaluationsCreated.push(await this.evaluationRepository.save(evaluation));
+                }
+            }
+        }
+
+        // به‌روزرسانی وضعیت دوره
+        cycle.status = CycleStatus.PUBLISHED;
+        cycle.publishedAt = new Date();
+        cycle.publishedById = publishedById;
+        await this.cycleRepository.save(cycle);
+
+        console.log(`[PerformanceService] Cycle published: ${cycleId}, ${evaluationsCreated.length} evaluations created`);
+
+        return {
+            cycle: await this.findCycleById(cycleId),
+            evaluationsCreated: evaluationsCreated.length,
+        };
+    }
+
+    async republishCycle(cycleId: string, publishDto: PublishEvaluationCycleDto, publishedById: string): Promise<{ cycle: EvaluationCycle; evaluationsCreated: number }> {
+        console.log('[PerformanceService] Republishing cycle:', cycleId);
+
+        const cycle = await this.findCycleById(cycleId);
+
+        // حذف ارزیابی‌های موجود این دوره
+        const existingEvaluations = await this.evaluationRepository.find({
+            where: { cycleId: cycle.id },
+        });
+
+        if (existingEvaluations.length > 0) {
+            await this.evaluationRepository.remove(existingEvaluations);
+            console.log(`[PerformanceService] Deleted ${existingEvaluations.length} existing evaluations`);
+        }
+
+        // انتشار مجدد
+        return this.publishCycle(cycleId, publishDto, publishedById);
+    }
+
+    async getCycleEvaluations(cycleId: string, query: PaginationQuery = {}): Promise<PaginatedResponse<PerformanceEvaluation>> {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            sortBy = 'createdAt',
+            sortOrder = 'DESC'
+        } = query;
+
+        const queryBuilder = this.evaluationRepository
+            .createQueryBuilder('evaluation')
+            .leftJoinAndSelect('evaluation.employee', 'employee')
+            .leftJoinAndSelect('evaluation.evaluator', 'evaluator')
+            .where('evaluation.cycleId = :cycleId', { cycleId });
+
+        if (search) {
+            queryBuilder.andWhere(
+                '(employee.firstName LIKE :search OR employee.lastName LIKE :search OR evaluator.firstName LIKE :search OR evaluator.lastName LIKE :search)',
+                { search: `%${search}%` }
+            );
+        }
+
+        queryBuilder.orderBy(`evaluation.${sortBy}`, sortOrder);
+
+        const total = await queryBuilder.getCount();
+
+        const skip = (page - 1) * limit;
+        queryBuilder.skip(skip).take(limit);
+
+        const evaluations = await queryBuilder.getMany();
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data: evaluations,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
         };
     }
 }

@@ -8,7 +8,7 @@ const { Client } = require('pg');
 
 async function testDatabaseCreation() {
   const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || '192.168.1.112',
     port: parseInt(process.env.DB_PORT || '5432'),
     user: process.env.DB_USERNAME || 'dev_user',
     password: process.env.DB_PASSWORD || 'dev_pass',

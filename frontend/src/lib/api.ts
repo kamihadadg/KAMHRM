@@ -929,3 +929,259 @@ export async function getSeederStats(): Promise<any> {
   }
   return response.json();
 }
+
+// Evaluation Templates API
+export interface EvaluationCriterion {
+  title: string;
+  description?: string;
+  rating?: number;
+  comments?: string;
+}
+
+export interface EvaluationCategory {
+  name: string;
+  description?: string;
+  weight?: number;
+  criteria: EvaluationCriterion[];
+}
+
+export interface EvaluationTemplate {
+  id: string;
+  title: string;
+  description?: string;
+  categories: EvaluationCategory[];
+  isActive: boolean;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEvaluationTemplateDto {
+  title: string;
+  description?: string;
+  categories: EvaluationCategory[];
+  isActive?: boolean;
+}
+
+export async function createEvaluationTemplate(dto: CreateEvaluationTemplateDto): Promise<EvaluationTemplate> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/templates`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(dto),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create evaluation template');
+  }
+  return response.json();
+}
+
+export async function getEvaluationTemplates(query: PaginationQuery = {}): Promise<PaginatedResponse<EvaluationTemplate>> {
+  const token = localStorage.getItem('auth_token');
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/hr/performance/templates?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch evaluation templates');
+  }
+  return response.json();
+}
+
+export async function getEvaluationTemplateById(id: string): Promise<EvaluationTemplate> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/templates/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch evaluation template');
+  }
+  return response.json();
+}
+
+export async function updateEvaluationTemplate(id: string, dto: Partial<CreateEvaluationTemplateDto>): Promise<EvaluationTemplate> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/templates/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(dto),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update evaluation template');
+  }
+  return response.json();
+}
+
+export async function deleteEvaluationTemplate(id: string): Promise<void> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/templates/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete evaluation template');
+  }
+}
+
+// Evaluation Cycles API
+export type EvaluationType = 'SELF' | 'MANAGER' | 'SUBORDINATE' | 'PEER' | 'CLIENT';
+export type CycleStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
+
+export interface EvaluationCycle {
+  id: string;
+  title: string;
+  description?: string;
+  templateId: string;
+  template?: EvaluationTemplate;
+  startDate: string;
+  endDate: string;
+  submissionDeadline?: string;
+  evaluationTypes: EvaluationType[];
+  status: CycleStatus;
+  publishedAt?: string;
+  publishedById?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEvaluationCycleDto {
+  title: string;
+  description?: string;
+  templateId: string;
+  startDate: string;
+  endDate: string;
+  submissionDeadline?: string;
+  evaluationTypes: EvaluationType[];
+}
+
+export interface PublishEvaluationCycleDto {
+  targetEmployeeIds?: string[];
+}
+
+export async function createEvaluationCycle(dto: CreateEvaluationCycleDto): Promise<EvaluationCycle> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/cycles`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(dto),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create evaluation cycle');
+  }
+  return response.json();
+}
+
+export async function getEvaluationCycles(query: PaginationQuery = {}): Promise<PaginatedResponse<EvaluationCycle>> {
+  const token = localStorage.getItem('auth_token');
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/hr/performance/cycles?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch evaluation cycles');
+  }
+  return response.json();
+}
+
+export async function getEvaluationCycleById(id: string): Promise<EvaluationCycle> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/cycles/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch evaluation cycle');
+  }
+  return response.json();
+}
+
+export async function publishEvaluationCycle(id: string, dto: PublishEvaluationCycleDto = {}): Promise<{ cycle: EvaluationCycle; evaluationsCreated: number }> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/cycles/${id}/publish`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(dto),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to publish evaluation cycle');
+  }
+  return response.json();
+}
+
+export async function republishEvaluationCycle(id: string, dto: PublishEvaluationCycleDto = {}): Promise<{ cycle: EvaluationCycle; evaluationsCreated: number }> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/performance/cycles/${id}/republish`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(dto),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to republish evaluation cycle');
+  }
+  return response.json();
+}
+
+export async function getCycleEvaluations(cycleId: string, query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
+  const token = localStorage.getItem('auth_token');
+  const params = new URLSearchParams();
+
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.search) params.append('search', query.search);
+  if (query.sortBy) params.append('sortBy', query.sortBy);
+  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+
+  const response = await fetch(`${API_BASE_URL}/hr/performance/cycles/${cycleId}/evaluations?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch cycle evaluations');
+  }
+  return response.json();
+}

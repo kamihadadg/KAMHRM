@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
-import { createDatabaseIfNotExists } from '../database-init';
 
 @Injectable()
 export class DatabaseService implements TypeOrmOptionsFactory {
   async createTypeOrmOptions(): Promise<TypeOrmModuleOptions> {
-    // Create database if it doesn't exist
-    await createDatabaseIfNotExists();
-
     return {
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',

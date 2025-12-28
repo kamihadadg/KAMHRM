@@ -3,12 +3,17 @@ import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
 import { UserRole } from './survey/entities/user.entity';
 import { join } from 'path';
+import { createDatabaseIfNotExists } from './database-init';
 
 // تنظیم زبان پیش‌فرض Node.js به فارسی
 process.env.LANG = 'fa_IR.UTF-8';
 process.env.LC_ALL = 'fa_IR.UTF-8';
 
 async function bootstrap() {
+  // Create database if it doesn't exist
+  console.log('🔍 Checking database...');
+  await createDatabaseIfNotExists();
+
   const app = await NestFactory.createApplicationContext(AppModule);
 
   try {
