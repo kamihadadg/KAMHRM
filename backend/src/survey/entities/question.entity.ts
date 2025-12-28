@@ -25,7 +25,7 @@ export class Question {
   @Column({ type: 'text' })
   question: string;
 
-  @Column({ type: 'nvarchar', length: 50, default: QuestionType.TEXT })
+  @Column({ type: 'varchar', length: 50, default: QuestionType.TEXT })
   type: QuestionType;
 
   @Column({ type: 'text', nullable: true })

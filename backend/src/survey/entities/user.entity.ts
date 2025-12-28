@@ -6,10 +6,12 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
+  OneToOne,
   JoinColumn,
 } from 'typeorm';
 import { Position } from './position.entity';
 import { Contract } from '../../hr/entities/contract.entity';
+import { EmployeeProfile } from '../../hr/entities/employee-profile.entity';
 
 export enum UserRole {
   EMPLOYEE = 'EMPLOYEE',
@@ -46,7 +48,7 @@ export class User {
   managerId: string; // مدیر مستقیم
 
   @Column({
-    type: 'nvarchar',
+    type: 'varchar',
     length: 50,
     default: UserRole.EMPLOYEE,
   })
@@ -77,6 +79,9 @@ export class User {
 
   @OneToMany(() => Contract, (contract) => contract.user)
   contracts: Contract[];
+
+  @OneToOne(() => EmployeeProfile, (profile) => profile.user)
+  employeeProfile: EmployeeProfile;
 
   // Computed properties
   get fullName(): string {

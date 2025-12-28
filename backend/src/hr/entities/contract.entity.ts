@@ -41,14 +41,14 @@ export class Contract {
     endDate: Date;
 
     @Column({
-        type: 'nvarchar',
+        type: 'varchar',
         length: 20,
         default: ContractStatus.DRAFT,
     })
     status: ContractStatus;
 
     @Column({
-        type: 'nvarchar',
+        type: 'varchar',
         length: 20,
         default: ContractType.FULL_TIME,
     })

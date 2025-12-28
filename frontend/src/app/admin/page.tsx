@@ -18,6 +18,7 @@ import {
   getAllContracts,
   getAllAssignments,
   updateContractStatus,
+  getAllEmployeeProfiles,
   deleteContract,
   deleteAssignment
 } from '@/lib/api';
@@ -27,6 +28,7 @@ import InteractiveOrgChart from '@/components/InteractiveOrgChart';
 import SurveyFormModal from '@/components/SurveyFormModal';
 import ContractFormModal from '@/components/ContractFormModal';
 import AssignmentFormModal from '@/components/AssignmentFormModal';
+import EmployeeProfileFormModal from '@/components/EmployeeProfileFormModal';
 import { Survey } from '@/types/survey';
 
 interface User {
@@ -51,11 +53,12 @@ interface User {
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'users' | 'positions' | 'org-chart' | 'surveys' | 'contracts'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'positions' | 'org-chart' | 'surveys' | 'contracts' | 'employees'>('users');
   const [users, setUsers] = useState<User[]>([]);
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
   const [orgChart, setOrgChart] = useState<any[]>([]);
+  const [employeeProfiles, setEmployeeProfiles] = useState<any[]>([]);
   const [flatPositions, setFlatPositions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserForm, setShowUserForm] = useState(false);
@@ -69,8 +72,10 @@ export default function AdminPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [showContractForm, setShowContractForm] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [showEmployeeProfileForm, setShowEmployeeProfileForm] = useState(false);
   const [editingContract, setEditingContract] = useState<any | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<any | null>(null);
+  const [editingEmployeeProfile, setEditingEmployeeProfile] = useState<any | null>(null);
 
   // Search & Pagination for ALL sections
   const [userSearch, setUserSearch] = useState('');
@@ -117,7 +122,7 @@ export default function AdminPage() {
   const loadData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [usersData, positionsData, orgChartData, flatPositionsData, surveysData, contractsData, assignmentsData] = await Promise.all([
+      const [usersData, positionsData, orgChartData, flatPositionsData, surveysData, contractsData, assignmentsData, employeeProfilesData] = await Promise.all([
         getAllUsers(),
         getAllPositions(),
         getOrganizationalChart(),
@@ -125,6 +130,7 @@ export default function AdminPage() {
         getAllSurveys(),
         getAllContracts(),
         getAllAssignments(),
+        getAllEmployeeProfiles(),
       ]);
       setUsers(usersData);
       setPositions(positionsData);
@@ -133,6 +139,7 @@ export default function AdminPage() {
       setSurveys(surveysData || []);
       setContracts(contractsData || []);
       setAssignments(assignmentsData || []);
+      setEmployeeProfiles(employeeProfilesData || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -299,6 +306,15 @@ export default function AdminPage() {
                   }`}
               >
                 قراردادها و احکام
+              </button>
+              <button
+                onClick={() => setActiveTab('employees')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'employees'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                مدیریت پرسنل ({employeeProfiles.length})
               </button>
             </nav>
           </div>
@@ -1262,6 +1278,132 @@ export default function AdminPage() {
           positions={positions}
           assignment={editingAssignment}
         />
+      )}
+
+      {/* Employee Profile Form Modal */}
+      {showEmployeeProfileForm && (
+        <EmployeeProfileFormModal
+          onClose={() => {
+            setShowEmployeeProfileForm(false);
+            setEditingEmployeeProfile(null);
+          }}
+          onSave={() => {
+            console.log('🔄 AdminPage - EmployeeProfile onSave triggered');
+            loadData(true);
+          }}
+          users={users}
+          employeeProfile={editingEmployeeProfile}
+        />
+      )}
+
+      {/* Employees Tab */}
+      {activeTab === 'employees' && (
+        <div className="space-y-6">
+          {/* Employee Profiles Section */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    لیست پرسنل
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">مدیریت پروفایل‌های پرسنلی</p>
+                </div>
+                <button
+                  onClick={() => setShowEmployeeProfileForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  افزودن پرسنل جدید
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        نام و نام خانوادگی
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        کد ملی
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        شماره پرسنلی
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        بخش
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        وضعیت
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        عملیات
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {employeeProfiles.map((profile) => (
+                      <tr key={profile.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-gray-900">
+                            {profile.user?.firstName} {profile.user?.lastName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            @{profile.user?.username}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {profile.nationalId}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {profile.employeeId || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {profile.department || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {profile.isActive ? (
+                            <span className="text-xs font-bold text-green-600">فعال</span>
+                          ) : (
+                            <span className="text-xs font-bold text-red-600">غیرفعال</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => {
+                              setEditingEmployeeProfile(profile);
+                              setShowEmployeeProfileForm(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                          >
+                            ویرایش
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('آیا از حذف این پروفایل پرسنلی اطمینان دارید؟')) {
+                                // deleteEmployeeProfile(profile.id).then(() => loadData(true));
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            حذف
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {employeeProfiles.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                          هیچ پروفایل پرسنلی یافت نشد. برای شروع، دکمه "افزودن پرسنل جدید" را کلیک کنید.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

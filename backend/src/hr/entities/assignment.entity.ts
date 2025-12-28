@@ -33,7 +33,7 @@ export class Assignment {
     @Column({ default: false })
     isPrimary: boolean;
 
-    @Column({ type: 'nvarchar', length: 1000, nullable: true })
+    @Column({ type: 'text', nullable: true })
     customJobDescription: string;
 
     @CreateDateColumn()

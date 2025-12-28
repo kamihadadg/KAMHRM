@@ -13,24 +13,16 @@ import { HrModule } from './hr/hr.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // تنظیمات PostgreSQL
     TypeOrmModule.forRoot({
-      type: 'mssql',
+      type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '1433'),
-      username: process.env.DB_USERNAME || 'sa',
-      password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_NAME || 'company_portal',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      username: process.env.DB_USERNAME || 'dev_user',
+      password: process.env.DB_PASSWORD || 'dev_pass',
+      database: process.env.DB_NAME || 'kamhrm',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Set to false in production
-      options: {
-        encrypt: false, // Set to true if using Azure SQL
-        trustServerCertificate: true,
-      },
-      // تنظیمات زبان فارسی برای دیتابیس
-      extra: {
-        charset: 'utf8mb4',
-        collate: 'utf8mb4_persian_ci',
-      },
     }),
     SurveyModule,
     AuthModule,

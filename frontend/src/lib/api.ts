@@ -1,6 +1,6 @@
 import { Survey, SurveyResponse, SurveyResults } from '@/types/survey';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.112:8081';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.112:3080';
 
 export async function getActiveSurveys(): Promise<Survey[]> {
   const response = await fetch(`${API_BASE_URL}/surveys/active`);
@@ -478,5 +478,95 @@ export async function deleteAssignment(id: string): Promise<void> {
   });
   if (!response.ok) {
     throw new Error('Failed to delete assignment');
+  }
+}
+
+// Employee Profile APIs
+export async function getAllEmployeeProfiles(): Promise<any[]> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch employee profiles');
+  }
+  return response.json();
+}
+
+export async function getEmployeeProfile(id: string): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch employee profile');
+  }
+  return response.json();
+}
+
+export async function getEmployeeProfileByUserId(userId: string): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles/user/${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch employee profile');
+  }
+  return response.json();
+}
+
+export async function createEmployeeProfile(employeeProfileData: any): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(employeeProfileData),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create employee profile');
+  }
+  return response.json();
+}
+
+export async function updateEmployeeProfile(id: string, employeeProfileData: any): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(employeeProfileData),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update employee profile');
+  }
+  return response.json();
+}
+
+export async function deleteEmployeeProfile(id: string): Promise<void> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/hr/employee-profiles/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete employee profile');
   }
 }

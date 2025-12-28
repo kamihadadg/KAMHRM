@@ -22,7 +22,7 @@ export class Survey {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   endDate: Date;
 
   @CreateDateColumn()

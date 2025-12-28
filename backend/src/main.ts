@@ -59,7 +59,7 @@ async function bootstrap() {
   const expressApp = serverApp.getHttpAdapter().getInstance();
 
   serverApp.enableCors({
-    origin: 'http://192.168.1.112:8080', // Next.js port
+    origin: 'http://192.168.1.112:3081', // Next.js port
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -67,7 +67,7 @@ async function bootstrap() {
   // Serve static files from uploads directory
   expressApp.use('/uploads', require('express').static(join(__dirname, '..', 'uploads')));
 
-  await serverApp.listen(process.env.PORT ?? 8081);
-  console.log(`🚀 Application is running on: http://localhost:${process.env.PORT ?? 8081}`);
+  await serverApp.listen(process.env.PORT ?? 3080);
+  console.log(`🚀 Application is running on: http://localhost:${process.env.PORT ?? 3080}`);
 }
 bootstrap();
