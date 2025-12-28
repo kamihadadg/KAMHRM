@@ -20,7 +20,8 @@ import {
   updateContractStatus,
   getAllEmployeeProfiles,
   deleteContract,
-  deleteAssignment
+  deleteAssignment,
+  resetOrgChartLayout
 } from '@/lib/api';
 import UserFormModal from '@/components/UserFormModal';
 import PositionFormModal from '@/components/PositionFormModal';
@@ -29,6 +30,7 @@ import SurveyFormModal from '@/components/SurveyFormModal';
 import ContractFormModal from '@/components/ContractFormModal';
 import AssignmentFormModal from '@/components/AssignmentFormModal';
 import EmployeeProfileFormModal from '@/components/EmployeeProfileFormModal';
+import SearchAndPagination from '@/components/SearchAndPagination';
 import { Survey } from '@/types/survey';
 import { seedTestData, clearTestData, getSeederStats } from '@/lib/api';
 
@@ -62,6 +64,14 @@ export default function AdminPage() {
   const [employeeProfiles, setEmployeeProfiles] = useState<any[]>([]);
   const [flatPositions, setFlatPositions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination Meta
+  const [userMeta, setUserMeta] = useState<any>(null);
+  const [positionMeta, setPositionMeta] = useState<any>(null);
+  const [surveyMeta, setSurveyMeta] = useState<any>(null);
+  const [contractMeta, setContractMeta] = useState<any>(null);
+  const [assignmentMeta, setAssignmentMeta] = useState<any>(null);
+  const [employeeProfileMeta, setEmployeeProfileMeta] = useState<any>(null);
   const [showUserForm, setShowUserForm] = useState(false);
   const [showPositionForm, setShowPositionForm] = useState(false);
   const [showSurveyForm, setShowSurveyForm] = useState(false);
@@ -88,12 +98,14 @@ export default function AdminPage() {
   const [surveySearch, setSurveySearch] = useState('');
   const [contractSearch, setContractSearch] = useState('');
   const [assignmentSearch, setAssignmentSearch] = useState('');
+  const [employeeProfileSearch, setEmployeeProfileSearch] = useState('');
 
   const [userPage, setUserPage] = useState(1);
   const [positionPage, setPositionPage] = useState(1);
   const [surveyPage, setSurveyPage] = useState(1);
   const [contractPage, setContractPage] = useState(1);
   const [assignmentPage, setAssignmentPage] = useState(1);
+  const [employeeProfilePage, setEmployeeProfilePage] = useState(1);
 
   const itemsPerPage = 10;
 
@@ -124,6 +136,13 @@ export default function AdminPage() {
     loadData();
   }, []);
 
+  // Reload data when search or page changes
+  useEffect(() => {
+    if (userPage || userSearch || positionPage || positionSearch || surveyPage || surveySearch || contractPage || contractSearch || assignmentPage || assignmentSearch || employeeProfilePage || employeeProfileSearch) {
+      loadData(true);
+    }
+  }, [userPage, userSearch, positionPage, positionSearch, surveyPage, surveySearch, contractPage, contractSearch, assignmentPage, assignmentSearch, employeeProfilePage, employeeProfileSearch]);
+
   const loadSeederStats = async () => {
     try {
       const stats = await getSeederStats();
@@ -137,23 +156,29 @@ export default function AdminPage() {
     try {
       if (!silent) setLoading(true);
       const [usersResponse, positionsResponse, orgChartData, flatPositionsData, surveysResponse, contractsResponse, assignmentsResponse, employeeProfilesResponse] = await Promise.all([
-        getAllUsers({ limit: 1000 }), // Load more users for admin
-        getAllPositions({ limit: 1000 }), // Load more positions for admin
+        getAllUsers({ page: userPage, limit: itemsPerPage, search: userSearch }),
+        getAllPositions({ page: positionPage, limit: itemsPerPage, search: positionSearch }),
         getOrganizationalChart(),
         getAllPositionsFlat(),
-        getAllSurveys({ limit: 1000 }), // Load more surveys for admin
-        getAllContracts({ limit: 1000 }), // Load more contracts for admin
-        getAllAssignments({ limit: 1000 }), // Load more assignments for admin
-        getAllEmployeeProfiles({ limit: 1000 }), // Load more profiles for admin
+        getAllSurveys({ page: surveyPage, limit: itemsPerPage, search: surveySearch }),
+        getAllContracts({ page: contractPage, limit: itemsPerPage, search: contractSearch }),
+        getAllAssignments({ page: assignmentPage, limit: itemsPerPage, search: assignmentSearch }),
+        getAllEmployeeProfiles({ page: employeeProfilePage, limit: itemsPerPage, search: employeeProfileSearch }),
       ]);
       setUsers(usersResponse.data);
+      setUserMeta(usersResponse.meta);
       setPositions(positionsResponse.data);
+      setPositionMeta(positionsResponse.meta);
       setOrgChart(orgChartData);
       setFlatPositions(flatPositionsData);
       setSurveys(surveysResponse.data);
+      setSurveyMeta(surveysResponse.meta);
       setContracts(contractsResponse.data);
+      setContractMeta(contractsResponse.meta);
       setAssignments(assignmentsResponse.data);
+      setAssignmentMeta(assignmentsResponse.meta);
       setEmployeeProfiles(employeeProfilesResponse.data);
+      setEmployeeProfileMeta(employeeProfilesResponse.meta);
 
       // Load seeder stats
       await loadSeederStats();
@@ -222,6 +247,24 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error deleting position:', error);
       alert('خطا در حذف سمت');
+    }
+  };
+
+  const handleResetLayout = async () => {
+    if (!confirm('آیا مطمئن هستید که می‌خواهید چیدمان را به حالت پیش‌فرض بازگردانید؟ تمام موقعیت‌های ذخیره شده پاک خواهند شد.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await resetOrgChartLayout();
+      alert('چیدمان با موفقیت به حالت پیش‌فرض بازگشت!');
+      await loadData(true); // Reload chart data
+    } catch (error: any) {
+      console.error('Error resetting layout:', error);
+      alert(`خطا در بازگشت به چیدمان پیش‌فرض: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -410,7 +453,21 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="overflow-hidden border border-gray-100 rounded-2xl">
+              {/* Search and Pagination */}
+              <SearchAndPagination
+                searchValue={userSearch}
+                onSearchChange={setUserSearch}
+                searchPlaceholder="جستجو بر اساس نام، نام خانوادگی یا کد پرسنلی..."
+                currentPage={userPage}
+                totalPages={userMeta?.totalPages || 1}
+                onPageChange={setUserPage}
+                totalItems={userMeta?.total || 0}
+                itemsPerPage={itemsPerPage}
+                showingFrom={userMeta ? (userPage - 1) * itemsPerPage + 1 : 0}
+                showingTo={userMeta ? Math.min(userPage * itemsPerPage, userMeta.total) : 0}
+              />
+
+              <div className="overflow-hidden border border-gray-100 rounded-2xl mt-4">
                 <table className="min-w-full divide-y divide-gray-100">
                   <thead className="bg-[#f8fafc]">
                     <tr>
@@ -500,6 +557,13 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
+                          {userSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ کاربری ثبت نشده است.'}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -536,7 +600,21 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="overflow-hidden border border-gray-100 rounded-2xl">
+              {/* Search and Pagination */}
+              <SearchAndPagination
+                searchValue={positionSearch}
+                onSearchChange={setPositionSearch}
+                searchPlaceholder="جستجو بر اساس عنوان سمت، توضیحات یا بخش..."
+                currentPage={positionPage}
+                totalPages={positionMeta?.totalPages || 1}
+                onPageChange={setPositionPage}
+                totalItems={positionMeta?.total || 0}
+                itemsPerPage={itemsPerPage}
+                showingFrom={positionMeta ? (positionPage - 1) * itemsPerPage + 1 : 0}
+                showingTo={positionMeta ? Math.min(positionPage * itemsPerPage, positionMeta.total) : 0}
+              />
+
+              <div className="overflow-hidden border border-gray-100 rounded-2xl mt-4">
                 <table className="min-w-full divide-y divide-gray-100">
                   <thead className="bg-[#f8fafc]">
                     <tr>
@@ -614,6 +692,13 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ))}
+                    {positions.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
+                          {positionSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ سمتی ثبت نشده است.'}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -695,6 +780,16 @@ export default function AdminPage() {
                 </div>
                 <div className="flex space-x-2 space-x-reverse">
                   <button
+                    onClick={handleResetLayout}
+                    className="group flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-orange-600 hover:border-orange-200 transition-all shadow-sm hover:shadow-md"
+                    title="بازگشت به چیدمان پیش‌فرض"
+                  >
+                    <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span className="text-xs font-bold">بازگشت به پیش‌فرض</span>
+                  </button>
+                  <button
                     onClick={() => loadData()}
                     className="group flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm hover:shadow-md"
                     title="به‌روزرسانی"
@@ -744,7 +839,21 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="overflow-hidden border border-gray-100 rounded-2xl">
+              {/* Search and Pagination */}
+              <SearchAndPagination
+                searchValue={surveySearch}
+                onSearchChange={setSurveySearch}
+                searchPlaceholder="جستجو بر اساس عنوان نظرسنجی..."
+                currentPage={surveyPage}
+                totalPages={surveyMeta?.totalPages || 1}
+                onPageChange={setSurveyPage}
+                totalItems={surveyMeta?.total || 0}
+                itemsPerPage={itemsPerPage}
+                showingFrom={surveyMeta ? (surveyPage - 1) * itemsPerPage + 1 : 0}
+                showingTo={surveyMeta ? Math.min(surveyPage * itemsPerPage, surveyMeta.total) : 0}
+              />
+
+              <div className="overflow-hidden border border-gray-100 rounded-2xl mt-4">
                 <table className="min-w-full divide-y divide-gray-100">
                   <thead className="bg-[#f8fafc]">
                     <tr>
@@ -788,7 +897,7 @@ export default function AdminPage() {
                     {surveys.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
-                          هیچ نظرسنجی یافت نشد. با دکمه بالا یکی ایجاد کنید.
+                          {surveySearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ نظرسنجی یافت نشد. با دکمه بالا یکی ایجاد کنید.'}
                         </td>
                       </tr>
                     )}
@@ -859,21 +968,21 @@ export default function AdminPage() {
                   </button>
                 </div>
 
-                {/* Search */}
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="جستجو بر اساس نام کارمند..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={contractSearch}
-                    onChange={(e) => {
-                      setContractSearch(e.target.value);
-                      setContractPage(1);
-                    }}
-                  />
-                </div>
+                {/* Search and Pagination */}
+                <SearchAndPagination
+                  searchValue={contractSearch}
+                  onSearchChange={setContractSearch}
+                  searchPlaceholder="جستجو بر اساس نام کارمند..."
+                  currentPage={contractPage}
+                  totalPages={contractMeta?.totalPages || 1}
+                  onPageChange={setContractPage}
+                  totalItems={contractMeta?.total || 0}
+                  itemsPerPage={itemsPerPage}
+                  showingFrom={contractMeta ? (contractPage - 1) * itemsPerPage + 1 : 0}
+                  showingTo={contractMeta ? Math.min(contractPage * itemsPerPage, contractMeta.total) : 0}
+                />
 
-                <div className="overflow-hidden border border-gray-100 rounded-2xl">
+                <div className="overflow-hidden border border-gray-100 rounded-2xl mt-4">
                   <table className="min-w-full divide-y divide-gray-100">
                     <thead className="bg-[#f8fafc]">
                       <tr>
@@ -886,15 +995,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-50">
-                      {contracts
-                        .filter(c => {
-                          const searchLower = contractSearch.toLowerCase();
-                          return (c.user?.firstName?.toLowerCase().includes(searchLower) ||
-                            c.user?.lastName?.toLowerCase().includes(searchLower) ||
-                            c.user?.employeeId?.toLowerCase().includes(searchLower));
-                        })
-                        .slice((contractPage - 1) * itemsPerPage, contractPage * itemsPerPage)
-                        .map((contract) => (
+                      {contracts.map((contract) => (
                           <tr key={contract.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-bold text-gray-900">{contract.user?.firstName} {contract.user?.lastName}</div>
@@ -1004,12 +1105,7 @@ export default function AdminPage() {
                             </td>
                           </tr>
                         ))}
-                      {contracts.filter(c => {
-                        const searchLower = contractSearch.toLowerCase();
-                        return (c.user?.firstName?.toLowerCase().includes(searchLower) ||
-                          c.user?.lastName?.toLowerCase().includes(searchLower) ||
-                          c.user?.employeeId?.toLowerCase().includes(searchLower));
-                      }).length === 0 && (
+                      {contracts.length === 0 && (
                           <tr>
                             <td colSpan={6} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
                               {contractSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ قراردادی ثبت نشده است.'}
@@ -1019,197 +1115,8 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-
-                {/* Pagination */}
-                {Math.ceil(contracts.filter(c => {
-                  const searchLower = contractSearch.toLowerCase();
-                  return (c.user?.firstName?.toLowerCase().includes(searchLower) ||
-                    c.user?.lastName?.toLowerCase().includes(searchLower) ||
-                    c.user?.employeeId?.toLowerCase().includes(searchLower));
-                }).length / itemsPerPage) > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-4">
-                      <button
-                        onClick={() => setContractPage(p => Math.max(1, p - 1))}
-                        disabled={contractPage === 1}
-                        className="px-3 py-1 border rounded disabled:opacity-50"
-                      >
-                        قبلی
-                      </button>
-                      <span className="text-sm text-gray-600">
-                        صفحه {contractPage} از {Math.ceil(contracts.filter(c => {
-                          const searchLower = contractSearch.toLowerCase();
-                          return (c.user?.firstName?.toLowerCase().includes(searchLower) ||
-                            c.user?.lastName?.toLowerCase().includes(searchLower) ||
-                            c.user?.employeeId?.toLowerCase().includes(searchLower));
-                        }).length / itemsPerPage)}
-                      </span>
-                      <button
-                        onClick={() => setContractPage(p => p + 1)}
-                        disabled={contractPage >= Math.ceil(contracts.filter(c => {
-                          const searchLower = contractSearch.toLowerCase();
-                          return (c.user?.firstName?.toLowerCase().includes(searchLower) ||
-                            c.user?.lastName?.toLowerCase().includes(searchLower) ||
-                            c.user?.employeeId?.toLowerCase().includes(searchLower));
-                        }).length / itemsPerPage)}
-                        className="px-3 py-1 border rounded disabled:opacity-50"
-                      >
-                        بعدی
-                      </button>
-                    </div>
-                  )}
               </div>
             </div>
-
-            {/* Users Tab */}
-            {(activeTab as any) === 'users' && (
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">مدیریت کاربران</h3>
-                      <p className="text-sm text-gray-500 mt-1">لیست کاربران و پرسنل سازمان</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setEditingUser(null);
-                        setShowUserForm(true);
-                      }}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
-                    >
-                      <span className="text-xl font-bold">+</span>
-                      افزودن کاربر جدید
-                    </button>
-                  </div>
-
-                  {/* Search */}
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      placeholder="جستجو بر اساس نام، نام خانوادگی یا کد پرسنلی..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={userSearch}
-                      onChange={(e) => {
-                        setUserSearch(e.target.value);
-                        setUserPage(1);
-                      }}
-                    />
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کاربر</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد پرسنلی</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نقش</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {users
-                          .filter(u => {
-                            const searchLower = userSearch.toLowerCase();
-                            return (u.firstName?.toLowerCase().includes(searchLower) ||
-                              u.lastName?.toLowerCase().includes(searchLower) ||
-                              u.employeeId?.toLowerCase().includes(searchLower) ||
-                              u.username?.toLowerCase().includes(searchLower));
-                          })
-                          .slice((userPage - 1) * itemsPerPage, userPage * itemsPerPage)
-                          .map((u) => (
-                            <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-bold text-gray-900">{u.firstName} {u.lastName}</div>
-                                <div className="text-xs text-gray-500">{u.username}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{u.employeeId || '-'}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{u.role === 'ADMIN' ? 'مدیر' : u.role === 'HR' ? 'منابع انسانی' : u.role === 'MANAGER' ? 'مدیر' : 'کارمند'}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => {
-                                      setEditingUser(u);
-                                      setShowUserForm(true);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-xs"
-                                    title="ویرایش"
-                                  >
-                                    ویرایش
-                                  </button>
-                                  <button
-                                    onClick={async () => {
-                                      if (confirm('آیا از حذف این کاربر اطمینان دارید؟')) {
-                                        await deleteUser(u.id);
-                                        loadData(true);
-                                      }
-                                    }}
-                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-xs"
-                                  >
-                                    حذف
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        {users.filter(u => {
-                          const searchLower = userSearch.toLowerCase();
-                          return (u.firstName?.toLowerCase().includes(searchLower) ||
-                            u.lastName?.toLowerCase().includes(searchLower) ||
-                            u.employeeId?.toLowerCase().includes(searchLower) ||
-                            u.username?.toLowerCase().includes(searchLower));
-                        }).length === 0 && (
-                            <tr>
-                              <td colSpan={4} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
-                                {userSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ کاربری ثبت نشده است.'}
-                              </td>
-                            </tr>
-                          )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination */}
-                  {Math.ceil(users.filter(u => {
-                    const searchLower = userSearch.toLowerCase();
-                    return (u.firstName?.toLowerCase().includes(searchLower) ||
-                      u.lastName?.toLowerCase().includes(searchLower) ||
-                      u.employeeId?.toLowerCase().includes(searchLower) ||
-                      u.username?.toLowerCase().includes(searchLower));
-                  }).length / itemsPerPage) > 1 && (
-                      <div className="flex justify-center items-center gap-2 mt-4">
-                        <button
-                          onClick={() => setUserPage(p => Math.max(1, p - 1))}
-                          disabled={userPage === 1}
-                          className="px-3 py-1 border rounded disabled:opacity-50"
-                        >
-                          قبلی
-                        </button>
-                        <span className="text-sm text-gray-600">
-                          صفحه {userPage} از {Math.ceil(users.filter(u => {
-                            const searchLower = userSearch.toLowerCase();
-                            return (u.firstName?.toLowerCase().includes(searchLower) ||
-                              u.lastName?.toLowerCase().includes(searchLower) ||
-                              u.employeeId?.toLowerCase().includes(searchLower) ||
-                              u.username?.toLowerCase().includes(searchLower));
-                          }).length / itemsPerPage)}
-                        </span>
-                        <button
-                          onClick={() => setUserPage(p => p + 1)}
-                          disabled={userPage >= Math.ceil(users.filter(u => {
-                            const searchLower = userSearch.toLowerCase();
-                            return (u.firstName?.toLowerCase().includes(searchLower) ||
-                              u.lastName?.toLowerCase().includes(searchLower) ||
-                              u.employeeId?.toLowerCase().includes(searchLower) ||
-                              u.username?.toLowerCase().includes(searchLower));
-                          }).length / itemsPerPage)}
-                          className="px-3 py-1 border rounded disabled:opacity-50"
-                        >
-                          بعدی
-                        </button>
-                      </div>
-                    )}
-                </div>
-              </div>
-            )}
 
             {/* Assignments Section */}
             <div className="bg-white shadow rounded-lg">
@@ -1230,7 +1137,21 @@ export default function AdminPage() {
                   </button>
                 </div>
 
-                <div className="overflow-hidden border border-gray-100 rounded-2xl">
+                {/* Search and Pagination */}
+                <SearchAndPagination
+                  searchValue={assignmentSearch}
+                  onSearchChange={setAssignmentSearch}
+                  searchPlaceholder="جستجو بر اساس نام کارمند یا سمت..."
+                  currentPage={assignmentPage}
+                  totalPages={assignmentMeta?.totalPages || 1}
+                  onPageChange={setAssignmentPage}
+                  totalItems={assignmentMeta?.total || 0}
+                  itemsPerPage={itemsPerPage}
+                  showingFrom={assignmentMeta ? (assignmentPage - 1) * itemsPerPage + 1 : 0}
+                  showingTo={assignmentMeta ? Math.min(assignmentPage * itemsPerPage, assignmentMeta.total) : 0}
+                />
+
+                <div className="overflow-hidden border border-gray-100 rounded-2xl mt-4">
                   <table className="min-w-full divide-y divide-gray-100">
                     <thead className="bg-[#f8fafc]">
                       <tr>
@@ -1305,7 +1226,7 @@ export default function AdminPage() {
                       {assignments.length === 0 && (
                         <tr>
                           <td colSpan={6} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
-                            هیچ انتساب شغلی ثبت نشده است.
+                            {assignmentSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ انتساب شغلی ثبت نشده است.'}
                           </td>
                         </tr>
                       )}
@@ -1388,7 +1309,21 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* Search and Pagination */}
+              <SearchAndPagination
+                searchValue={employeeProfileSearch}
+                onSearchChange={setEmployeeProfileSearch}
+                searchPlaceholder="جستجو بر اساس نام، نام خانوادگی، کد ملی یا شماره پرسنلی..."
+                currentPage={employeeProfilePage}
+                totalPages={employeeProfileMeta?.totalPages || 1}
+                onPageChange={setEmployeeProfilePage}
+                totalItems={employeeProfileMeta?.total || 0}
+                itemsPerPage={itemsPerPage}
+                showingFrom={employeeProfileMeta ? (employeeProfilePage - 1) * itemsPerPage + 1 : 0}
+                showingTo={employeeProfileMeta ? Math.min(employeeProfilePage * itemsPerPage, employeeProfileMeta.total) : 0}
+              />
+
+              <div className="overflow-x-auto mt-4">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1465,7 +1400,7 @@ export default function AdminPage() {
                     {employeeProfiles.length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                          هیچ پروفایل پرسنلی یافت نشد. برای شروع، دکمه "افزودن پرسنل جدید" را کلیک کنید.
+                          {employeeProfileSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ پروفایل پرسنلی یافت نشد. برای شروع، دکمه "افزودن پرسنل جدید" را کلیک کنید.'}
                         </td>
                       </tr>
                     )}

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getActiveSurveys } from '@/lib/api';
+import { getAllSurveys } from '@/lib/api';
 import { Survey } from '@/types/survey';
 import RouteGuard from '@/components/RouteGuard';
+import SearchAndPagination from '@/components/SearchAndPagination';
 
 export default function SurveysPage() {
     return (
@@ -17,16 +18,34 @@ export default function SurveysPage() {
 function SurveysContent() {
     const [surveys, setSurveys] = useState<Survey[]>([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [meta, setMeta] = useState<any>(null);
+    const itemsPerPage = 9; // 3x3 grid
 
     useEffect(() => {
         loadSurveys();
-    }, []);
+    }, [page, search]);
 
     const loadSurveys = async () => {
         try {
             setLoading(true);
-            const data = await getActiveSurveys();
-            setSurveys(data);
+            const response = await getAllSurveys({ 
+                page, 
+                limit: itemsPerPage, 
+                search,
+                sortBy: 'createdAt',
+                sortOrder: 'DESC'
+            });
+            // Filter only active surveys
+            const activeSurveys = response.data.filter(s => s.isActive);
+            setSurveys(activeSurveys);
+            // Adjust meta for filtered results
+            setMeta({
+                ...response.meta,
+                total: activeSurveys.length,
+                totalPages: Math.ceil(activeSurveys.length / itemsPerPage)
+            });
         } catch (error) {
             console.error('Error loading surveys:', error);
         } finally {
@@ -52,12 +71,26 @@ function SurveysContent() {
 
             <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="px-4 py-6 sm:px-0">
+                    {/* Search and Pagination */}
+                    <SearchAndPagination
+                        searchValue={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="جستجو بر اساس عنوان نظرسنجی..."
+                        currentPage={page}
+                        totalPages={meta?.totalPages || 1}
+                        onPageChange={setPage}
+                        totalItems={meta?.total || 0}
+                        itemsPerPage={itemsPerPage}
+                        showingFrom={meta ? (page - 1) * itemsPerPage + 1 : 0}
+                        showingTo={meta ? Math.min(page * itemsPerPage, meta.total) : 0}
+                    />
+
                     {loading ? (
-                        <div className="flex justify-center items-center h-64">
+                        <div className="flex justify-center items-center h-64 mt-4">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                     ) : surveys.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                             {surveys.map((survey) => (
                                 <div key={survey.id} className="bg-white shadow rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                                     <div className="p-6">

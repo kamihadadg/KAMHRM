@@ -169,6 +169,17 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Put('admin/positions/reset-layout')
+  async resetOrgChartLayout(@Request() req) {
+    // Check if user is admin
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new Error('دسترسی غیرمجاز');
+    }
+    await this.authService.resetAllPositionCoordinates();
+    return { message: 'چیدمان به حالت پیش‌فرض بازگشت' };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Put('admin/positions/:id')
   async updatePosition(
     @Request() req,

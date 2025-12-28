@@ -75,7 +75,7 @@ export class EmployeeProfileService {
         // Apply search filter
         if (search) {
             queryBuilder.andWhere(
-                '(profile.nationalId LIKE :search OR profile.employeeNumber LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR profile.phone LIKE :search)',
+                '(profile.nationalId LIKE :search OR profile.employeeId LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR user.employeeId LIKE :search OR profile.phoneNumber LIKE :search OR profile.department LIKE :search)',
                 { search: `%${search}%` }
             );
         }

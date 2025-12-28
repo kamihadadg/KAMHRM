@@ -19,4 +19,8 @@ export class CreatePositionDto {
 
   @IsOptional()
   isAggregate?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  colorScheme?: number;
 }

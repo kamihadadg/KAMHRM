@@ -36,7 +36,7 @@ export class ContractService {
         // Apply search filter
         if (search) {
             queryBuilder.andWhere(
-                '(contract.title LIKE :search OR contract.description LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)',
+                '(user.firstName LIKE :search OR user.lastName LIKE :search OR user.employeeId LIKE :search OR user.username LIKE :search OR contract.contractType LIKE :search OR contract.status LIKE :search)',
                 { search: `%${search}%` }
             );
         }

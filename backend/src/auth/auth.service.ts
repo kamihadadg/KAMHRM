@@ -412,6 +412,7 @@ export class AuthService {
         x: pos.x,
         y: pos.y,
         parentPositionId: pos.parentPositionId,
+        colorScheme: pos.colorScheme,
         employees: employees,
         children: []
       });
@@ -462,6 +463,15 @@ export class AuthService {
 
   async updatePositionCoordinates(id: string, x: number | null, y: number | null): Promise<void> {
     await this.positionRepository.update(id, { x, y });
+  }
+
+  async resetAllPositionCoordinates(): Promise<void> {
+    // Reset all position coordinates to null to use auto-layout
+    await this.positionRepository
+      .createQueryBuilder()
+      .update()
+      .set({ x: null, y: null })
+      .execute();
   }
 
   async getAllPositionsFlat(): Promise<Position[]> {

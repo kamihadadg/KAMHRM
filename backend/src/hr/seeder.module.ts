@@ -7,6 +7,8 @@ import { Position } from '../survey/entities/position.entity';
 import { EmployeeProfile } from './entities/employee-profile.entity';
 import { PerformanceEvaluation } from './entities/performance-evaluation.entity';
 import { PerformanceGoal } from './entities/performance-goal.entity';
+import { Contract } from './entities/contract.entity';
+import { Assignment } from './entities/assignment.entity';
 
 @Module({
     imports: [
@@ -16,6 +18,8 @@ import { PerformanceGoal } from './entities/performance-goal.entity';
             EmployeeProfile,
             PerformanceEvaluation,
             PerformanceGoal,
+            Contract,
+            Assignment,
         ]),
     ],
     controllers: [SeederController],

@@ -316,6 +316,22 @@ export async function updatePositionCoordinates(positionId: string, x: number | 
   return response.json();
 }
 
+export async function resetOrgChartLayout(): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/auth/admin/positions/reset-layout`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to reset org chart layout');
+  }
+  return response.json();
+}
+
 export async function uploadProfileImage(file: File): Promise<any> {
   const token = localStorage.getItem('auth_token');
   const formData = new FormData();

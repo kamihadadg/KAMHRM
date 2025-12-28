@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getComments, createComment, CommentItem, CreateCommentDto } from '@/lib/api';
+import SearchAndPagination from '@/components/SearchAndPagination';
 
 export default function FeedbackPage() {
   const [comments, setComments] = useState<CommentItem[]>([]);
+  const [filteredComments, setFilteredComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -13,15 +15,32 @@ export default function FeedbackPage() {
     name: '',
     message: '',
   });
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadComments();
   }, []);
 
+  useEffect(() => {
+    // Client-side filtering and pagination
+    const filtered = comments.filter(comment => {
+      if (!search) return true;
+      const searchLower = search.toLowerCase();
+      return (
+        comment.message?.toLowerCase().includes(searchLower) ||
+        comment.name?.toLowerCase().includes(searchLower)
+      );
+    });
+    setFilteredComments(filtered);
+    setPage(1); // Reset to first page on search
+  }, [comments, search]);
+
   const loadComments = async () => {
     try {
       setLoading(true);
-      const data = await getComments();
+      const data = await getComments(1000); // Load more for client-side pagination
       setComments(data);
     } catch (error) {
       console.error('Error loading comments:', error);
@@ -181,26 +200,46 @@ export default function FeedbackPage() {
         {/* Comments List */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-6">
-            نظرات ثبت شده ({comments.length})
+            نظرات ثبت شده ({filteredComments.length})
           </h3>
 
+          {/* Search and Pagination */}
+          {!loading && filteredComments.length > 0 && (
+            <SearchAndPagination
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="جستجو در نظرات..."
+              currentPage={page}
+              totalPages={Math.ceil(filteredComments.length / itemsPerPage)}
+              onPageChange={setPage}
+              totalItems={filteredComments.length}
+              itemsPerPage={itemsPerPage}
+              showingFrom={(page - 1) * itemsPerPage + 1}
+              showingTo={Math.min(page * itemsPerPage, filteredComments.length)}
+            />
+          )}
+
           {loading ? (
-            <div className="flex justify-center py-8">
+            <div className="flex justify-center py-8 mt-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-8">
+          ) : filteredComments.length === 0 ? (
+            <div className="text-center py-8 mt-4">
               <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <p className="text-gray-500">هنوز نظری ثبت نشده است.</p>
-              <p className="text-sm text-gray-400 mt-1">
-                اولین نفری باشید که نظر خود را ثبت می‌کند!
-              </p>
+              <p className="text-gray-500">{search ? 'نتیجه‌ای یافت نشد.' : 'هنوز نظری ثبت نشده است.'}</p>
+              {!search && (
+                <p className="text-sm text-gray-400 mt-1">
+                  اولین نفری باشید که نظر خود را ثبت می‌کند!
+                </p>
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {comments.map((comment) => (
+            <div className="space-y-4 mt-4">
+              {filteredComments
+                .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                .map((comment) => (
                 <div key={comment.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

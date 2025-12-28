@@ -80,7 +80,7 @@ export class AssignmentService {
         // Apply search filter
         if (search) {
             queryBuilder.andWhere(
-                '(position.title LIKE :search OR contract.title LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)',
+                '(position.title LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR user.employeeId LIKE :search OR user.username LIKE :search)',
                 { search: `%${search}%` }
             );
         }

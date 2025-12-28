@@ -3,10 +3,12 @@ import { AppModule } from './app.module';
 import { SurveyService } from './survey/survey.service';
 import { CreateSurveyDto } from './survey/dto/create-survey.dto';
 import { QuestionType } from './survey/entities/question.entity';
+import { SeederService } from './hr/seeder.service';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const surveyService = app.get(SurveyService);
+  const seederService = app.get(SeederService);
 
   const sampleSurvey: CreateSurveyDto = {
     title: 'نظرسنجی رضایت از خدمات شرکت',
@@ -62,10 +64,18 @@ async function seed() {
   };
 
   try {
+    console.log('Clearing existing test data...');
+    const clearResult = await seederService.clearTestData();
+    console.log('Clear completed:', clearResult);
+
     const survey = await surveyService.createSurvey(sampleSurvey);
     console.log('Sample survey created:', survey.id);
+
+    console.log('Starting HR test data seeding...');
+    const seederResult = await seederService.seedTestData();
+    console.log('HR test data seeding completed:', seederResult);
   } catch (error) {
-    console.error('Error creating sample survey:', error);
+    console.error('Error during seeding:', error);
   } finally {
     await app.close();
   }

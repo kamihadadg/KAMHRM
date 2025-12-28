@@ -17,6 +17,7 @@ import {
 } from '@/types/performance';
 import EvaluationCard from '@/components/EvaluationCard';
 import GoalCard from '@/components/GoalCard';
+import SearchAndPagination from '@/components/SearchAndPagination';
 
 const PerformancePage: React.FC = () => {
     const { user } = useAuth();
@@ -29,9 +30,18 @@ const PerformancePage: React.FC = () => {
     const [editingEvaluation, setEditingEvaluation] = useState<PerformanceEvaluation | null>(null);
     const [editingGoal, setEditingGoal] = useState<PerformanceGoal | null>(null);
 
+    // Search and Pagination
+    const [evaluationSearch, setEvaluationSearch] = useState('');
+    const [goalSearch, setGoalSearch] = useState('');
+    const [evaluationPage, setEvaluationPage] = useState(1);
+    const [goalPage, setGoalPage] = useState(1);
+    const [evaluationMeta, setEvaluationMeta] = useState<any>(null);
+    const [goalMeta, setGoalMeta] = useState<any>(null);
+    const itemsPerPage = 10;
+
     useEffect(() => {
         loadData();
-    }, [user]);
+    }, [user, evaluationPage, evaluationSearch, goalPage, goalSearch]);
 
     const loadData = async () => {
         if (!user) return;
@@ -39,13 +49,33 @@ const PerformancePage: React.FC = () => {
         try {
             setLoading(true);
 
-            // Load evaluations
-            const evaluationsResponse = await getAllPerformanceEvaluations({ limit: 1000 });
-            setEvaluations(evaluationsResponse.data);
+            // Load evaluations for current user
+            const evaluationsResponse = await getAllPerformanceEvaluations(
+                { page: evaluationPage, limit: itemsPerPage, search: evaluationSearch },
+                user.id
+            );
+            const myEvaluations = evaluationsResponse.data.filter(e => 
+                e.employeeId === user.id || e.evaluatorId === user.id
+            );
+            setEvaluations(myEvaluations);
+            setEvaluationMeta({
+                ...evaluationsResponse.meta,
+                total: myEvaluations.length,
+                totalPages: Math.ceil(myEvaluations.length / itemsPerPage)
+            });
 
-            // Load goals
-            const goalsResponse = await getAllPerformanceGoals({ limit: 1000 });
-            setGoals(goalsResponse.data);
+            // Load goals for current user
+            const goalsResponse = await getAllPerformanceGoals(
+                { page: goalPage, limit: itemsPerPage, search: goalSearch },
+                user.id
+            );
+            const myGoals = goalsResponse.data.filter(g => g.employeeId === user.id);
+            setGoals(myGoals);
+            setGoalMeta({
+                ...goalsResponse.meta,
+                total: myGoals.length,
+                totalPages: Math.ceil(myGoals.length / itemsPerPage)
+            });
 
             // Load statistics for current user
             const stats = await getEvaluationStatistics(user.id);
@@ -101,11 +131,8 @@ const PerformancePage: React.FC = () => {
         );
     }
 
-    const myEvaluations = evaluations.filter(e =>
-        e.employeeId === user?.id || e.evaluatorId === user?.id
-    );
-
-    const myGoals = goals.filter(g => g.employeeId === user?.id);
+    const myEvaluations = evaluations;
+    const myGoals = goals;
 
     const pendingEvaluations = evaluations.filter(e =>
         e.evaluatorId === user?.id &&
@@ -195,14 +222,28 @@ const PerformancePage: React.FC = () => {
             <div className="space-y-6">
                 {/* Evaluations Section */}
                 <div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">ارزیابی‌های عملکرد</h2>
                         <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                            {myEvaluations.length} ارزیابی
+                            {evaluationMeta?.total || myEvaluations.length} ارزیابی
                         </span>
                     </div>
 
-                    <div className="grid gap-4">
+                    {/* Search and Pagination */}
+                    <SearchAndPagination
+                        searchValue={evaluationSearch}
+                        onSearchChange={setEvaluationSearch}
+                        searchPlaceholder="جستجو بر اساس دوره یا توضیحات..."
+                        currentPage={evaluationPage}
+                        totalPages={evaluationMeta?.totalPages || 1}
+                        onPageChange={setEvaluationPage}
+                        totalItems={evaluationMeta?.total || 0}
+                        itemsPerPage={itemsPerPage}
+                        showingFrom={evaluationMeta ? (evaluationPage - 1) * itemsPerPage + 1 : 0}
+                        showingTo={evaluationMeta ? Math.min(evaluationPage * itemsPerPage, evaluationMeta.total) : 0}
+                    />
+
+                    <div className="grid gap-4 mt-4">
                         {myEvaluations.length === 0 ? (
                             <div className="bg-white p-12 rounded-lg shadow text-center">
                                 <span className="text-4xl text-gray-400 block text-center mb-4">👥</span>
@@ -238,14 +279,28 @@ const PerformancePage: React.FC = () => {
 
                 {/* Goals Section */}
                 <div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">اهداف عملکردی</h2>
                         <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                            {myGoals.length} هدف
+                            {goalMeta?.total || myGoals.length} هدف
                         </span>
                     </div>
 
-                    <div className="grid gap-4">
+                    {/* Search and Pagination */}
+                    <SearchAndPagination
+                        searchValue={goalSearch}
+                        onSearchChange={setGoalSearch}
+                        searchPlaceholder="جستجو بر اساس عنوان یا توضیحات هدف..."
+                        currentPage={goalPage}
+                        totalPages={goalMeta?.totalPages || 1}
+                        onPageChange={setGoalPage}
+                        totalItems={goalMeta?.total || 0}
+                        itemsPerPage={itemsPerPage}
+                        showingFrom={goalMeta ? (goalPage - 1) * itemsPerPage + 1 : 0}
+                        showingTo={goalMeta ? Math.min(goalPage * itemsPerPage, goalMeta.total) : 0}
+                    />
+
+                    <div className="grid gap-4 mt-4">
                         {myGoals.length === 0 ? (
                             <div className="bg-white p-12 rounded-lg shadow text-center">
                                 <span className="text-4xl text-gray-400 block text-center mb-4">🎯</span>

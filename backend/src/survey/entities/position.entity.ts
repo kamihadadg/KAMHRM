@@ -42,6 +42,9 @@ export class Position {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ type: 'int', nullable: true })
+  colorScheme?: number; // رنگ‌بندی نود در چارت سازمانی (شماره رنگ)
+
   @CreateDateColumn()
   createdAt: Date;
 

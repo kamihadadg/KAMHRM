@@ -11,6 +11,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 interface SeederResult {
     positions: number;
     users: number;
+    contracts: number;
+    assignments: number;
     goals: number;
     evaluations: number;
     errors: string[];

@@ -36,9 +36,79 @@ const OrgNode = ({ data }: any) => {
     const hasChildren = data.hasChildren;
     const onToggleCollapse = data.onToggleCollapse;
 
+    // Convert number to hex color and create beautiful color scheme
+    const numberToHex = (num: number) => `#${num.toString(16).padStart(6, '0')}`;
+    const colorHex = data.colorScheme ? numberToHex(data.colorScheme) : '#3b82f6';
+
+    // Create beautiful gradients and colors based on the selected color
+    const createBeautifulColors = (hex: string) => {
+        // Parse the hex color
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+
+        // Create lighter and darker variants for gradient
+        const lightR = Math.min(255, r + 120);
+        const lightG = Math.min(255, g + 120);
+        const lightB = Math.min(255, b + 120);
+
+        const darkR = Math.max(0, r - 60);
+        const darkG = Math.max(0, g - 60);
+        const darkB = Math.max(0, b - 60);
+
+        // Create complementary colors for borders and accents
+        const borderR = Math.max(0, r - 40);
+        const borderG = Math.max(0, g - 40);
+        const borderB = Math.max(0, b - 40);
+
+        // Calculate text color based on brightness for better contrast
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        const textColor = brightness > 128 ? `rgb(${Math.max(0, r - 150)}, ${Math.max(0, g - 150)}, ${Math.max(0, b - 150)})` : '#ffffff';
+
+        return {
+            gradient: `linear-gradient(135deg, rgba(${lightR}, ${lightG}, ${lightB}, 0.9) 0%, rgba(${r}, ${g}, ${b}, 0.95) 50%, rgba(${darkR}, ${darkG}, ${darkB}, 0.9) 100%)`,
+            border: `rgba(${borderR}, ${borderG}, ${borderB}, 0.8)`,
+            shadow: `rgba(${r}, ${g}, ${b}, 0.4)`,
+            glow: `rgba(${r}, ${g}, ${b}, 0.6)`,
+            accent: `rgba(${Math.min(255, r + 50)}, ${Math.min(255, g + 50)}, ${Math.min(255, b + 50)}, 0.9)`,
+            text: textColor,
+            titleBg: `rgba(${Math.min(255, r + 30)}, ${Math.min(255, g + 30)}, ${Math.min(255, b + 30)}, 0.2)`,
+            titleBorder: `rgba(${r}, ${g}, ${b}, 0.3)`
+        };
+    };
+
+    const beautifulColors = createBeautifulColors(colorHex);
+
     return (
-        <div className={`px-2 py-2 shadow-lg rounded-2xl bg-white border-2 transition-all duration-200 ${data.isDraggingOver ? 'border-blue-500 bg-blue-50 scale-105 shadow-blue-200' : 'border-gray-100'} min-w-[160px] cursor-pointer react-flow__draghandle relative`}>
-            <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-blue-400 border-2 border-white" />
+        <div
+            className={`px-4 py-4 rounded-3xl shadow-2xl border-3 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 cursor-pointer react-flow__draghandle relative overflow-hidden backdrop-blur-sm ${data.isDraggingOver ? 'scale-110 shadow-3xl ring-4' : 'hover:shadow-3xl'}`}
+            style={{
+                background: data.isDraggingOver ? `linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 0.95) 100%)` : beautifulColors.gradient,
+                borderColor: data.isDraggingOver ? 'rgba(59, 130, 246, 0.8)' : beautifulColors.border,
+                boxShadow: data.isDraggingOver
+                    ? '0 25px 50px rgba(59, 130, 246, 0.4), 0 0 0 4px rgba(59, 130, 246, 0.3)'
+                    : `0 20px 40px ${beautifulColors.shadow}, 0 0 0 2px ${beautifulColors.glow}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+                minWidth: '220px',
+                maxWidth: '280px'
+            }}
+        >
+            {/* Beautiful background pattern */}
+            <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-2 right-2 w-8 h-8 rounded-full" style={{ backgroundColor: beautifulColors.accent }}></div>
+                <div className="absolute bottom-2 left-2 w-6 h-6 rounded-full" style={{ backgroundColor: beautifulColors.accent }}></div>
+                <div className="absolute top-1/2 left-4 w-2 h-2 rounded-full" style={{ backgroundColor: beautifulColors.accent }}></div>
+            </div>
+
+            {/* Handles with beautiful styling */}
+            <Handle
+                type="target"
+                position={Position.Top}
+                className="w-4 h-4 !border-4 !border-white shadow-lg"
+                style={{
+                    backgroundColor: beautifulColors.accent,
+                    boxShadow: `0 0 0 3px ${beautifulColors.border}, 0 0 10px ${beautifulColors.glow}`
+                }}
+            />
 
             {/* Collapse/Expand Button */}
             {hasChildren && (
@@ -47,108 +117,202 @@ const OrgNode = ({ data }: any) => {
                         e.stopPropagation();
                         onToggleCollapse();
                     }}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-all duration-200 hover:scale-110 z-10"
-                    title={isCollapsed ? 'باز کردن' : 'بستن'}
+                    className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-2xl border-3 border-white transition-all duration-300 hover:scale-125 z-20 animate-pulse"
+                    style={{
+                        background: `linear-gradient(135deg, ${beautifulColors.accent} 0%, rgba(${colorHex.slice(1, 3)}, ${colorHex.slice(3, 5)}, ${colorHex.slice(5, 7)}, 0.8) 100%)`,
+                        boxShadow: `0 8px 20px ${beautifulColors.shadow}, 0 0 0 2px rgba(255, 255, 255, 0.8)`
+                    }}
+                    title={isCollapsed ? 'باز کردن فرزندان' : 'بستن فرزندان'}
                 >
                     <svg
-                        className={`w-3 h-3 transition-transform duration-200 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
+                        className={`w-4 h-4 transition-all duration-300 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
                         fill="none"
-                        stroke="currentColor"
+                        stroke="white"
+                        strokeWidth="3"
                         viewBox="0 0 24 24"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
             )}
 
-            <div className="flex flex-col items-center pointer-events-none">
+            <div className="flex flex-col items-center pointer-events-none relative z-10">
                 {isAggregate ? (
-                    <div className="flex flex-col items-center py-1">
-                        <div className="flex -space-x-3 mb-2">
-                            {data.employees?.slice(0, 3).map((emp: any, idx: number) => (
-                                <div key={emp.id} className="relative" style={{ zIndex: 10 - idx }}>
+                    <div className="flex flex-col items-center py-2">
+                        {/* Beautiful avatar stack */}
+                        <div className="flex -space-x-4 mb-3 relative">
+                            {data.employees?.slice(0, 4).map((emp: any, idx: number) => (
+                                <div key={emp.id} className="relative transition-all duration-300 hover:scale-110 hover:z-20" style={{ zIndex: 10 - idx }}>
                                     {emp.profileImageUrl ? (
                                         <img
                                             src={getFullImageUrl(emp.profileImageUrl) || ''}
-                                            className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                                            className="w-12 h-12 rounded-full border-3 border-white shadow-xl object-cover transition-all duration-300 hover:shadow-2xl"
+                                            style={{ borderColor: 'rgba(255, 255, 255, 0.9)' }}
                                         />
                                     ) : (
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-[10px] font-bold shadow-sm border-2 border-white">
+                                        <div
+                                            className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-black shadow-xl border-3 transition-all duration-300 hover:shadow-2xl"
+                                            style={{
+                                                background: `linear-gradient(135deg, ${beautifulColors.accent} 0%, rgba(${colorHex.slice(1, 3)}, ${colorHex.slice(3, 5)}, ${colorHex.slice(5, 7)}, 0.8) 100%)`,
+                                                borderColor: 'rgba(255, 255, 255, 0.9)'
+                                            }}
+                                        >
                                             {emp.firstName[0]}
                                         </div>
                                     )}
-                                    {/* Workload badge */}
+                                    {/* Beautiful workload badge */}
                                     {emp.workloadPercentage && emp.workloadPercentage < 100 && (
-                                        <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[8px] font-black px-1 rounded-full border border-white">
+                                        <div
+                                            className="absolute -bottom-1 -right-1 text-white text-[9px] font-black px-2 py-1 rounded-full border-2 shadow-lg animate-pulse"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                                borderColor: 'rgba(255, 255, 255, 0.9)',
+                                                boxShadow: '0 4px 8px rgba(245, 158, 11, 0.4)'
+                                            }}
+                                        >
                                             {emp.workloadPercentage}%
                                         </div>
                                     )}
                                 </div>
                             ))}
-                            {employeeCount > 3 && (
-                                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-[10px] font-black border-2 border-white shadow-sm">
-                                    +{employeeCount - 3}
+                            {employeeCount > 4 && (
+                                <div
+                                    className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-black border-3 shadow-xl"
+                                    style={{
+                                        background: beautifulColors.titleBg,
+                                        borderColor: 'rgba(255, 255, 255, 0.9)',
+                                        color: beautifulColors.text
+                                    }}
+                                >
+                                    +{employeeCount - 4}
                                 </div>
                             )}
                             {employeeCount === 0 && (
-                                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-200">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div
+                                    className="w-12 h-12 rounded-full flex items-center justify-center border-3 border-dashed shadow-lg"
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.1)',
+                                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        color: 'rgba(255, 255, 255, 0.6)'
+                                    }}
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
                                 </div>
                             )}
                         </div>
-                        <div className="text-[12px] font-black text-gray-800">
+                        <div
+                            className="text-sm font-black px-3 py-1 rounded-full border-2 shadow-lg"
+                            style={{
+                                color: beautifulColors.text,
+                                background: beautifulColors.titleBg,
+                                borderColor: beautifulColors.titleBorder
+                            }}
+                        >
                             {employeeCount} نفر
                         </div>
                     </div>
                 ) : (
                     mainEmployee ? (
                         <div className="flex flex-col items-center">
-                            <div className="relative">
+                            <div className="relative mb-2">
                                 {mainEmployee.profileImageUrl ? (
                                     <img
                                         src={getFullImageUrl(mainEmployee.profileImageUrl) || ''}
                                         alt={mainEmployee.firstName}
-                                        className="w-11 h-11 rounded-full border-2 border-white shadow-md object-cover mb-1"
+                                        className="w-14 h-14 rounded-full border-4 shadow-2xl object-cover transition-all duration-300 hover:scale-110"
+                                        style={{
+                                            borderColor: 'rgba(255, 255, 255, 0.9)',
+                                            boxShadow: `0 8px 20px ${beautifulColors.shadow}, 0 0 0 3px ${beautifulColors.glow}`
+                                        }}
                                     />
                                 ) : (
-                                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md border-2 border-white mb-1">
+                                    <div
+                                        className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-black shadow-2xl border-4 transition-all duration-300 hover:scale-110"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${beautifulColors.accent} 0%, rgba(${colorHex.slice(1, 3)}, ${colorHex.slice(3, 5)}, ${colorHex.slice(5, 7)}, 0.8) 100%)`,
+                                            borderColor: 'rgba(255, 255, 255, 0.9)',
+                                            boxShadow: `0 8px 20px ${beautifulColors.shadow}, 0 0 0 3px ${beautifulColors.glow}`
+                                        }}
+                                    >
                                         {mainEmployee.firstName[0]}
                                     </div>
                                 )}
-                                {/* Workload percentage badge */}
+                                {/* Beautiful workload badge */}
                                 {mainEmployee.workloadPercentage && mainEmployee.workloadPercentage < 100 && (
-                                    <div className="absolute -bottom-0 -right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border-2 border-white shadow-md">
+                                    <div
+                                        className="absolute -bottom-1 -right-1 text-white text-[10px] font-black px-2 py-1 rounded-full border-3 shadow-xl animate-pulse"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                            borderColor: 'rgba(255, 255, 255, 0.9)',
+                                            boxShadow: '0 4px 8px rgba(245, 158, 11, 0.4)'
+                                        }}
+                                    >
                                         {mainEmployee.workloadPercentage}%
                                     </div>
                                 )}
-                                {/* Primary badge */}
+                                {/* Beautiful primary badge */}
                                 {mainEmployee.isPrimary && (
-                                    <div className="absolute -top-1 -left-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] font-black px-1 py-0.5 rounded-full border-2 border-white shadow-md">
-                                        ★
+                                    <div
+                                        className="absolute -top-2 -left-2 text-white text-sm px-2 py-1 rounded-full border-3 shadow-xl animate-bounce"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            borderColor: 'rgba(255, 255, 255, 0.9)',
+                                            boxShadow: '0 4px 8px rgba(16, 185, 129, 0.4)'
+                                        }}
+                                    >
+                                        ⭐
                                     </div>
                                 )}
                             </div>
-                            <div className="text-[11px] font-bold text-gray-800 text-center">
+                            <div
+                                className="text-sm font-bold text-center mb-2 px-2"
+                                style={{ color: beautifulColors.text }}
+                            >
                                 {mainEmployee.firstName} {mainEmployee.lastName}
                             </div>
                         </div>
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-1 border-2 border-dashed border-gray-200">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center mb-2 border-3 border-dashed shadow-lg"
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                                color: 'rgba(255, 255, 255, 0.6)'
+                            }}
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
                     )
                 )}
-                <div className="text-[10px] font-black text-blue-600 mt-1 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-tighter">
+
+                {/* Beautiful title */}
+                <div
+                    className="text-xs font-black px-3 py-2 rounded-full border-2 shadow-lg uppercase tracking-wider text-center transition-all duration-300 hover:scale-105"
+                    style={{
+                        color: beautifulColors.text,
+                        background: beautifulColors.titleBg,
+                        borderColor: beautifulColors.titleBorder,
+                        boxShadow: `0 4px 12px ${beautifulColors.shadow}, inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                    }}
+                >
                     {data.title}
                 </div>
             </div>
 
-            <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-blue-400 border-2 border-white" />
-        </div >
+            <Handle
+                type="source"
+                position={Position.Bottom}
+                className="w-4 h-4 !border-4 !border-white shadow-lg"
+                style={{
+                    backgroundColor: beautifulColors.accent,
+                    boxShadow: `0 0 0 3px ${beautifulColors.border}, 0 0 10px ${beautifulColors.glow}`
+                }}
+            />
+        </div>
     );
 };
 
@@ -164,7 +328,14 @@ const nodeHeight = 100;
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
     const isHorizontal = direction === 'LR' || direction === 'RL';
-    dagreGraph.setGraph({ rankdir: direction });
+    dagreGraph.setGraph({ 
+        rankdir: direction,
+        ranksep: 120, // فاصله بین رتبه‌ها (سطح‌ها) - عمودی برای TB
+        nodesep: 80,  // فاصله بین نودها در همان رتبه - افقی برای TB
+        edgesep: 50,  // فاصله بین یال‌ها
+        marginx: 50,  // حاشیه افقی
+        marginy: 50   // حاشیه عمودی
+    });
 
     nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -232,6 +403,7 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
         }
     }, []);
 
+
     const toggleCollapse = useCallback((nodeId: string) => {
         setCollapsedNodes(prev => {
             const newSet = new Set(prev);
@@ -250,7 +422,16 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
             setTimeout(() => fitView({ padding: 0.2, duration: 400 }), 100);
         };
         document.addEventListener('fullscreenchange', handleFSChange);
-        return () => document.removeEventListener('fullscreenchange', handleFSChange);
+
+        const handleFitView = () => {
+            fitView({ padding: 0.2, duration: 800 });
+        };
+        document.addEventListener('fitChartView', handleFitView);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFSChange);
+            document.removeEventListener('fitChartView', handleFitView);
+        };
     }, [fitView]);
 
     // Flatten the tree data for React Flow
@@ -277,6 +458,7 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
                     employees: item.employees,
                     description: item.description,
                     isAggregate: item.isAggregate,
+                    colorScheme: item.colorScheme,
                     isDraggingOver: false,
                     isCollapsed,
                     hasChildren,
@@ -403,11 +585,55 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
         );
     }, [findTargetNode, setNodes]);
 
+    // Check if dragged node is a parent of target node
+    const isParentOf = useCallback((draggedNodeId: string, targetNodeId: string) => {
+        const findNodeInTree = (nodes: any[], targetId: string): any => {
+            for (const node of nodes) {
+                if (node.id === targetId) return node;
+                if (node.children) {
+                    const found = findNodeInTree(node.children, targetId);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        const targetNode = findNodeInTree(data, targetNodeId);
+        if (!targetNode) return false;
+
+        // Check if dragged node is in the parent chain of target node
+        let current = targetNode;
+        while (current.parentPositionId) {
+            if (current.parentPositionId === draggedNodeId) {
+                return true;
+            }
+            // Find parent node
+            current = findNodeInTree(data, current.parentPositionId);
+            if (!current) break;
+        }
+
+        return false;
+    }, [data]);
+
     const onNodeDragStop = useCallback(
         async (_: any, node: Node) => {
             const targetNode = findTargetNode(node);
 
             if (targetNode) {
+                // Check if dragged node is a parent of target node
+                if (isParentOf(node.id, targetNode.id)) {
+                    console.log('Cannot reorder: dragged node is a parent of target node');
+                    // Reset drag states without making changes
+                    setNodes((nds) =>
+                        nds.map((n) => ({
+                            ...n,
+                            data: { ...n.data, isDraggingOver: false },
+                            zIndex: 1
+                        }))
+                    );
+                    return;
+                }
+
                 setIsProcessing(true);
                 try {
                     await onReorder(node.id, targetNode.id);
@@ -452,7 +678,7 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
                 }))
             );
         },
-        [nodes, findTargetNode, onReorder, initializeChart]
+        [nodes, findTargetNode, onReorder, initializeChart, isParentOf]
     );
 
     return (
@@ -662,40 +888,73 @@ function OrgChartContent({ data, onReorder, readOnly = false }: InteractiveOrgCh
                 }}
                 nodeTypes={nodeTypes}
                 connectionLineType={ConnectionLineType.SmoothStep}
+                defaultEdgeOptions={{
+                    style: {
+                        stroke: '#6366f1',
+                        strokeWidth: 3,
+                        filter: 'drop-shadow(0 2px 4px rgba(99, 102, 241, 0.3))'
+                    },
+                    animated: true,
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: '#6366f1',
+                        width: 20,
+                        height: 20,
+                    },
+                    type: 'smoothstep'
+                }}
                 fitView
                 nodesDraggable={true}
                 elementsSelectable={true}
                 deleteKeyCode={null}
             >
-                <Background gap={20} color="#e5e7eb" />
+                <Background
+                    gap={30}
+                    color="rgba(99, 102, 241, 0.1)"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.8) 100%)'
+                    }}
+                />
                 <Controls />
-                <Panel position="top-right" className="bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-xl border border-gray-100 flex flex-col space-y-2 min-w-[120px]">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter text-center border-b border-gray-50 pb-1 mb-1">چیدمان</div>
-                    <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
+                <Panel position="top-right" className="bg-white/95 backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-white/20 flex flex-col space-y-3 min-w-[140px] overflow-hidden">
+                    <div className="text-xs font-black text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text uppercase tracking-wider text-center border-b border-gradient-to-r from-blue-100 to-purple-100 pb-2 mb-2">چیدمان چارت</div>
+                    <div className="flex bg-gradient-to-r from-gray-50 to-blue-50 p-2 rounded-2xl border border-gray-100/50 shadow-inner">
                         <button
                             onClick={() => onLayoutChange('TB')}
-                            title="عمودی"
-                            className={`flex-1 flex justify-center py-2 rounded-lg transition-all ${direction === 'TB' ? 'bg-white shadow-md text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="چیدمان عمودی"
+                            className={`flex-1 flex justify-center py-3 rounded-xl transition-all duration-300 hover:scale-105 ${
+                                direction === 'TB'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                                    : 'text-gray-400 hover:text-blue-500 hover:bg-white/50'
+                            }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                             </svg>
                         </button>
                         <button
                             onClick={() => onLayoutChange('LR')}
-                            title="افقی (چپ به راست)"
-                            className={`flex-1 flex justify-center py-2 rounded-lg transition-all ${direction === 'LR' ? 'bg-white shadow-md text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="چیدمان افقی چپ به راست"
+                            className={`flex-1 flex justify-center py-3 rounded-xl transition-all duration-300 hover:scale-105 ${
+                                direction === 'LR'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                                    : 'text-gray-400 hover:text-blue-500 hover:bg-white/50'
+                            }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </button>
                         <button
                             onClick={() => onLayoutChange('RL')}
-                            title="افقی (راست به چپ)"
-                            className={`flex-1 flex justify-center py-2 rounded-lg transition-all ${direction === 'RL' ? 'bg-white shadow-md text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="چیدمان افقی راست به چپ"
+                            className={`flex-1 flex justify-center py-3 rounded-xl transition-all duration-300 hover:scale-105 ${
+                                direction === 'RL'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                                    : 'text-gray-400 hover:text-blue-500 hover:bg-white/50'
+                            }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
                         </button>
