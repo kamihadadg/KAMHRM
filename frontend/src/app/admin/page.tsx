@@ -21,7 +21,8 @@ import {
   getAllEmployeeProfiles,
   deleteContract,
   deleteAssignment,
-  resetOrgChartLayout
+  resetOrgChartLayout,
+  resetUserPassword
 } from '@/lib/api';
 import UserFormModal from '@/components/UserFormModal';
 import PositionFormModal from '@/components/PositionFormModal';
@@ -237,6 +238,17 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetPassword = async (userId: string) => {
+    if (!confirm('آیا مطمئن هستید که می‌خواهید رمز عبور این کاربر را ریست کنید؟ رمز عبور جدید به صورت خودکار تولید خواهد شد.')) return;
+
+    try {
+      const result = await resetUserPassword(userId);
+      alert(`رمز عبور کاربر با موفقیت ریست شد.\nرمز عبور جدید: ${result.newPassword}\n\nلطفا این رمز عبور را یادداشت کرده و به کاربر اطلاع دهید.`);
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      alert(`خطا در ریست رمز عبور: ${error.message}`);
+    }
+  };
 
   const handleDeletePosition = async (positionId: string) => {
     if (!confirm('آیا مطمئن هستید که می‌خواهید این سمت را حذف کنید؟')) return;
@@ -481,9 +493,6 @@ export default function AdminPage() {
                         نقش
                       </th>
                       <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        سمت
-                      </th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                         عملیات
                       </th>
                     </tr>
@@ -525,9 +534,6 @@ export default function AdminPage() {
                                 user.role === 'HR' ? 'منابع انسانی' : 'کارمند'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.position?.title || <span className="text-gray-300 italic">بدون سمت</span>}
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
                             <button
@@ -540,6 +546,15 @@ export default function AdminPage() {
                             >
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleResetPassword(user.id)}
+                              className="group p-2 rounded-lg text-orange-600 hover:bg-orange-50 transition-all border border-transparent hover:border-orange-100"
+                              title="ریست رمز عبور"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                               </svg>
                             </button>
                             {user.role !== 'ADMIN' && (
@@ -998,8 +1013,8 @@ export default function AdminPage() {
                       {contracts.map((contract) => (
                           <tr key={contract.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-bold text-gray-900">{contract.user?.firstName} {contract.user?.lastName}</div>
-                              <div className="text-xs text-gray-500">{contract.user?.employeeId}</div>
+                              <div className="text-sm font-bold text-gray-900">{contract.employee?.firstName} {contract.employee?.lastName}</div>
+                              <div className="text-xs text-gray-500">{contract.employee?.employeeId}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                               {contract.contractType === 'FULL_TIME' ? 'تمام وقت' :
@@ -1168,7 +1183,7 @@ export default function AdminPage() {
                         <tr key={assignment.id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-bold text-gray-900">
-                              {assignment.contract?.user?.firstName} {assignment.contract?.user?.lastName}
+                              {assignment.contract?.employee?.firstName} {assignment.contract?.employee?.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
                               قرارداد: {new Date(assignment.contract?.startDate).toLocaleDateString('fa-IR')}

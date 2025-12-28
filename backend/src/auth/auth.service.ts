@@ -245,6 +245,25 @@ export class AuthService {
     await this.userRepository.remove(user);
   }
 
+  async resetUserPassword(id: string): Promise<{ message: string; newPassword: string }> {
+    const user = await this.getUserById(id);
+
+    // Generate a new random password
+    const newPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    await this.userRepository.update(user.id, {
+      password: hashedPassword,
+      updatedAt: new Date(),
+    });
+
+    return {
+      message: 'رمز عبور کاربر با موفقیت ریست شد',
+      newPassword: newPassword,
+    };
+  }
+
 
   // Admin methods for position management
   async createPosition(createPositionDto: CreatePositionDto): Promise<Position> {

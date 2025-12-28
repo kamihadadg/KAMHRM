@@ -122,6 +122,17 @@ export class AuthController {
     return { message: 'کاربر با موفقیت حذف شد' };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('admin/users/:id/reset-password')
+  async resetUserPassword(@Request() req, @Param('id') id: string) {
+    // Check if user is admin
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new Error('دسترسی غیرمجاز');
+    }
+    const result = await this.authService.resetUserPassword(id);
+    return result;
+  }
+
 
   // Admin Position Management Endpoints
   @UseGuards(JwtAuthGuard)

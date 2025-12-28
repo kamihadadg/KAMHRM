@@ -225,6 +225,21 @@ export async function deleteUser(userId: string): Promise<void> {
   }
 }
 
+export async function resetUserPassword(userId: string): Promise<any> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/auth/admin/users/${userId}/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to reset user password');
+  }
+  return response.json();
+}
+
 
 // Position management API functions
 export async function getAllPositions(query: PaginationQuery = {}): Promise<PaginatedResponse<any>> {
