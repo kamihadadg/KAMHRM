@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import RouteGuard from '@/components/RouteGuard';
+import SearchAndPagination from '@/components/SearchAndPagination';
 import {
   getEvaluationCycleById,
   getCycleEvaluations,
@@ -35,7 +36,9 @@ function EvaluationCycleDetailContent() {
   const [pagination, setPagination] = useState<PaginationQuery>({
     page: 1,
     limit: 20,
+    search: '',
   });
+  const [paginationMeta, setPaginationMeta] = useState<any>(null);
 
   useEffect(() => {
     loadCycle();
@@ -45,7 +48,7 @@ function EvaluationCycleDetailContent() {
     if (cycleId) {
       loadEvaluations();
     }
-  }, [cycleId, pagination.page]);
+  }, [cycleId, pagination.page, pagination.search]);
 
   const loadCycle = async () => {
     try {
@@ -66,6 +69,7 @@ function EvaluationCycleDetailContent() {
       setLoadingEvaluations(true);
       const response = await getCycleEvaluations(cycleId, pagination);
       setEvaluations(response.data);
+      setPaginationMeta(response.meta);
     } catch (error) {
       console.error('Failed to load evaluations:', error);
     } finally {
@@ -129,13 +133,24 @@ function EvaluationCycleDetailContent() {
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{cycle.title}</h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{cycle.title}</h1>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  cycle.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                  cycle.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {cycle.status === 'DRAFT' && 'پیش‌نویس'}
+                  {cycle.status === 'PUBLISHED' && 'منتشر شده'}
+                  {cycle.status === 'CLOSED' && 'بسته شده'}
+                </span>
+              </div>
               {cycle.description && (
                 <p className="text-gray-600">{cycle.description}</p>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mr-4">
               {cycle.status === 'DRAFT' && (
                 <button
                   onClick={handlePublish}
@@ -194,6 +209,23 @@ function EvaluationCycleDetailContent() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold mb-4">لیست ارزیابی‌ها</h2>
           
+          {paginationMeta && (
+            <div className="mb-4">
+              <SearchAndPagination
+                searchValue={pagination.search || ''}
+                onSearchChange={(value) => setPagination({ ...pagination, search: value, page: 1 })}
+                searchPlaceholder="جستجو در ارزیابی‌ها..."
+                currentPage={paginationMeta.page}
+                totalPages={paginationMeta.totalPages}
+                onPageChange={(page) => setPagination({ ...pagination, page })}
+                totalItems={paginationMeta.total}
+                itemsPerPage={paginationMeta.limit}
+                showingFrom={(paginationMeta.page - 1) * paginationMeta.limit + 1}
+                showingTo={Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)}
+              />
+            </div>
+          )}
+          
           {loadingEvaluations ? (
             <p className="text-gray-500">در حال بارگذاری...</p>
           ) : evaluations.length === 0 ? (
@@ -211,31 +243,36 @@ function EvaluationCycleDetailContent() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {evaluations.map(eval => (
-                    <tr key={eval.id}>
+                  {evaluations.map(evaluation => (
+                    <tr key={evaluation.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {eval.employee?.firstName} {eval.employee?.lastName}
+                        {evaluation.employee?.firstName} {evaluation.employee?.lastName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {eval.evaluator?.firstName} {eval.evaluator?.lastName}
+                        {evaluation.evaluator?.firstName} {evaluation.evaluator?.lastName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {eval.evaluationType === 'SELF' && 'خود'}
-                        {eval.evaluationType === 'MANAGER' && 'مدیر'}
-                        {eval.evaluationType === 'SUBORDINATE' && 'زیرمجموعه'}
-                        {eval.evaluationType === 'PEER' && 'هم‌ردیف'}
+                        {evaluation.evaluationType === 'SELF' && 'خود'}
+                        {evaluation.evaluationType === 'MANAGER' && 'مدیر'}
+                        {evaluation.evaluationType === 'SUBORDINATE' && 'زیرمجموعه'}
+                        {evaluation.evaluationType === 'PEER' && 'هم‌ردیف'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs rounded ${
-                          eval.status === 'DRAFT' ? 'bg-gray-100' :
-                          eval.status === 'SUBMITTED' ? 'bg-blue-100' :
-                          eval.status === 'APPROVED' ? 'bg-green-100' : 'bg-red-100'
+                          evaluation.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                          evaluation.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-800' :
+                          evaluation.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 
+                          evaluation.status === 'REVIEWED' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {eval.status}
+                          {evaluation.status === 'DRAFT' && 'پیش‌نویس'}
+                          {evaluation.status === 'SUBMITTED' && 'ارسال شده'}
+                          {evaluation.status === 'REVIEWED' && 'بررسی شده'}
+                          {evaluation.status === 'APPROVED' && 'تایید شده'}
+                          {evaluation.status === 'REJECTED' && 'رد شده'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {eval.overallRating || '-'}
+                        {evaluation.overallRating ? `${evaluation.overallRating}/5` : '-'}
                       </td>
                     </tr>
                   ))}

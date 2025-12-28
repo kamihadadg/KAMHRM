@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import RouteGuard from '@/components/RouteGuard';
 import EvaluationTemplateForm from '@/components/EvaluationTemplateForm';
@@ -37,6 +38,7 @@ function EvaluationTemplatesContent() {
     limit: 10,
     search: '',
   });
+  const [paginationMeta, setPaginationMeta] = useState<any>(null);
 
   useEffect(() => {
     loadTemplates();
@@ -47,7 +49,7 @@ function EvaluationTemplatesContent() {
       setLoading(true);
       const response = await getEvaluationTemplates(pagination);
       setTemplates(response.data);
-      // Update pagination meta if needed
+      setPaginationMeta(response.meta);
     } catch (error) {
       console.error('Failed to load templates:', error);
       alert('خطا در بارگذاری تمپلیت‌ها');
@@ -111,6 +113,14 @@ function EvaluationTemplatesContent() {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
+          <div className="mb-4">
+            <button
+              onClick={handleCancel}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              ← بازگشت به لیست تمپلیت‌ها
+            </button>
+          </div>
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-bold mb-6">
               {editingTemplate ? 'ویرایش تمپلیت' : 'ایجاد تمپلیت جدید'}
@@ -130,6 +140,14 @@ function EvaluationTemplatesContent() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-4">
+          <Link
+            href="/admin"
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
+            ← بازگشت به پنل مدیریت
+          </Link>
+        </div>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">مدیریت تمپلیت‌های ارزیابی</h1>
           <button
@@ -139,6 +157,23 @@ function EvaluationTemplatesContent() {
             + ایجاد تمپلیت جدید
           </button>
         </div>
+
+        {paginationMeta && (
+          <div className="mb-4">
+            <SearchAndPagination
+              searchValue={pagination.search || ''}
+              onSearchChange={(value) => setPagination({ ...pagination, search: value, page: 1 })}
+              searchPlaceholder="جستجو در تمپلیت‌ها..."
+              currentPage={paginationMeta.page}
+              totalPages={paginationMeta.totalPages}
+              onPageChange={(page) => setPagination({ ...pagination, page })}
+              totalItems={paginationMeta.total}
+              itemsPerPage={paginationMeta.limit}
+              showingFrom={(paginationMeta.page - 1) * paginationMeta.limit + 1}
+              showingTo={Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)}
+            />
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow">
           {loading ? (

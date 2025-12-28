@@ -539,13 +539,17 @@ export class PerformanceService {
 
         const cycle = await this.findCycleById(cycleId);
 
-        if (cycle.status === CycleStatus.PUBLISHED) {
-            throw new BadRequestException('Cycle is already published. Use republish instead.');
-        }
-
         if (cycle.status === CycleStatus.CLOSED) {
             throw new BadRequestException('Cannot publish a closed cycle');
         }
+
+        // اگر قبلاً منتشر شده، باید از republish استفاده شود
+        // اما برای اینکه republishCycle بتواند از این متد استفاده کند، این چک را حذف می‌کنیم
+        // و بررسی را در controller انجام می‌دهیم
+
+        // تبدیل تاریخ‌ها به Date object (اگر string هستند)
+        const startDate = cycle.startDate instanceof Date ? cycle.startDate : new Date(cycle.startDate);
+        const endDate = cycle.endDate instanceof Date ? cycle.endDate : new Date(cycle.endDate);
 
         // دریافت لیست پرسنل بر اساس چارت سازمانی
         let targetEmployees: User[];
@@ -596,9 +600,9 @@ export class PerformanceService {
                                 evaluationType: EvaluationType.SUBORDINATE,
                                 cycleId: cycle.id,
                                 templateId: cycle.templateId,
-                                period: `${cycle.startDate.toISOString().split('T')[0]}_${cycle.endDate.toISOString().split('T')[0]}`,
-                                startDate: cycle.startDate,
-                                endDate: cycle.endDate,
+                                period: `${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}`,
+                                startDate: startDate,
+                                endDate: endDate,
                                 categories: JSON.parse(JSON.stringify(template.categories)), // کپی عمیق
                                 status: EvaluationStatus.DRAFT,
                                 isRepublished: false,
@@ -617,9 +621,9 @@ export class PerformanceService {
                                 evaluationType: EvaluationType.PEER,
                                 cycleId: cycle.id,
                                 templateId: cycle.templateId,
-                                period: `${cycle.startDate.toISOString().split('T')[0]}_${cycle.endDate.toISOString().split('T')[0]}`,
-                                startDate: cycle.startDate,
-                                endDate: cycle.endDate,
+                                period: `${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}`,
+                                startDate: startDate,
+                                endDate: endDate,
                                 categories: JSON.parse(JSON.stringify(template.categories)), // کپی عمیق
                                 status: EvaluationStatus.DRAFT,
                                 isRepublished: false,
@@ -637,9 +641,9 @@ export class PerformanceService {
                         evaluationType: evaluationType,
                         cycleId: cycle.id,
                         templateId: cycle.templateId,
-                        period: `${cycle.startDate.toISOString().split('T')[0]}_${cycle.endDate.toISOString().split('T')[0]}`,
-                        startDate: cycle.startDate,
-                        endDate: cycle.endDate,
+                        period: `${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}`,
+                        startDate: startDate,
+                        endDate: endDate,
                         categories: JSON.parse(JSON.stringify(template.categories)), // کپی عمیق
                         status: EvaluationStatus.DRAFT,
                         isRepublished: false,

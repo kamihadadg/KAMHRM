@@ -1431,7 +1431,7 @@ export default function AdminPage() {
       {activeTab === 'performance' && (
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-medium text-gray-900">
                 مدیریت ارزیابی عملکرد
               </h3>
@@ -1441,25 +1441,81 @@ export default function AdminPage() {
                 </Link>
               </div>
             </div>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Templates Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">تمپلیت‌های ارزیابی</h4>
+                    <p className="text-sm text-gray-600">مدیریت ساختار سوالات و دسته‌بندی‌ها</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  ایجاد و مدیریت تمپلیت‌های ارزیابی با دسته‌بندی‌ها و سوالات مختلف برای استفاده در دوره‌های ارزیابی
+                </p>
+                <Link
+                  href="/admin/evaluation-templates"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                >
+                  مدیریت تمپلیت‌ها →
+                </Link>
+              </div>
+
+              {/* Cycles Card */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">دوره‌های ارزیابی</h4>
+                    <p className="text-sm text-gray-600">ایجاد و مدیریت دوره‌های ارزیابی</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  ایجاد دوره‌های ارزیابی، انتخاب تمپلیت، تعیین انواع نشر و انتشار خودکار ارزیابی‌ها برای پرسنل
+                </p>
+                <Link
+                  href="/admin/evaluation-cycles"
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                >
+                  مدیریت دوره‌ها →
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <div className="flex">
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">
-                    ارزیابی عملکرد 360 درجه
+                  <h3 className="text-sm font-medium text-blue-800">
+                    راهنمای استفاده از سیستم ارزیابی عملکرد
                   </h3>
-                  <div className="mt-2 text-sm text-yellow-700">
+                  <div className="mt-2 text-sm text-blue-700 space-y-2">
                     <p>
-                      این بخش برای مدیریت ارزیابی‌های عملکردی سازمان طراحی شده است.
-                      برای مشاهده و مدیریت ارزیابی‌های خود، از لینک بالا استفاده کنید.
+                      <strong>مرحله 1:</strong> ابتدا یک تمپلیت ارزیابی با دسته‌بندی‌ها و سوالات ایجاد کنید
+                    </p>
+                    <p>
+                      <strong>مرحله 2:</strong> یک دوره ارزیابی ایجاد کرده و تمپلیت را انتخاب کنید
+                    </p>
+                    <p>
+                      <strong>مرحله 3:</strong> انواع ارزیابی را انتخاب کنید (خود، مدیر، زیرمجموعه، هم‌ردیف)
+                    </p>
+                    <p>
+                      <strong>مرحله 4:</strong> دوره را منتشر کنید تا ارزیابی‌ها خودکار برای پرسنل ایجاد شوند
+                    </p>
+                    <p>
+                      <strong>نکته:</strong> می‌توانید دوره را بازنشر کنید تا ارزیابی‌های جدید ایجاد شوند
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="text-center py-12">
-              <div className="text-gray-500">
-                <p className="text-lg">ارزیابی عملکرد در دست توسعه</p>
-                <p className="text-sm mt-2">این قابلیت به زودی اضافه خواهد شد.</p>
               </div>
             </div>
           </div>
