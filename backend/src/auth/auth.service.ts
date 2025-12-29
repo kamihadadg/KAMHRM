@@ -511,4 +511,22 @@ export class AuthService {
 
     return validPositions;
   }
+
+  async getAllPositionsAll(): Promise<Position[]> {
+    const positions = await this.positionRepository.find({
+      select: ['id', 'title', 'description', 'parentPositionId', 'order', 'isActive'],
+      order: { order: 'ASC' },
+    });
+
+    // Filter out invalid positions
+    const validPositions = positions.filter(pos => {
+      if (!pos.id || typeof pos.id !== 'string' || pos.id.length !== 36) {
+        console.error('Invalid position found in database:', pos);
+        return false;
+      }
+      return true;
+    });
+
+    return validPositions;
+  }
 }

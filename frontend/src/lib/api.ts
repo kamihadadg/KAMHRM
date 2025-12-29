@@ -303,6 +303,19 @@ export async function getAllPositionsFlat(): Promise<any[]> {
   return response.json();
 }
 
+export async function getAllPositionsAll(): Promise<any[]> {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/auth/admin/positions/all`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch all positions');
+  }
+  return response.json();
+}
+
 export async function deletePosition(positionId: string): Promise<void> {
   const token = localStorage.getItem('auth_token');
   const response = await fetch(`${API_BASE_URL}/auth/admin/positions/${positionId}`, {

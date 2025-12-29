@@ -170,6 +170,16 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('admin/positions/all')
+  async getAllPositionsAll(@Request() req) {
+    // Check if user is admin
+    if (req.user.role !== UserRole.SUPERADMIN) {
+      throw new Error('دسترسی غیرمجاز');
+    }
+    return this.authService.getAllPositionsAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('admin/positions/:id')
   async getPositionById(@Request() req, @Param('id') id: string) {
     // Check if user is admin

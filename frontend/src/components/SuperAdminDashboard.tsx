@@ -13,6 +13,7 @@ import {
   deletePosition,
   getOrganizationalChart,
   getAllPositionsFlat,
+  getAllPositionsAll,
   updatePositionParent,
   getAllContracts,
   getAllAssignments,
@@ -59,6 +60,7 @@ export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'positions' | 'org-chart' | 'contracts' | 'employees' | 'performance' | 'comments' | 'seeder'>('users');
   const [users, setUsers] = useState<User[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
+  const [allPositions, setAllPositions] = useState<any[]>([]);
   const [orgChart, setOrgChart] = useState<any[]>([]);
   const [employeeProfiles, setEmployeeProfiles] = useState<any[]>([]);
   const [flatPositions, setFlatPositions] = useState<any[]>([]);
@@ -149,9 +151,10 @@ export default function SuperAdminDashboard() {
   const loadData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [usersResponse, positionsResponse, orgChartData, flatPositionsData, contractsResponse, assignmentsResponse, employeeProfilesResponse] = await Promise.all([
+      const [usersResponse, positionsResponse, allPositionsData, orgChartData, flatPositionsData, contractsResponse, assignmentsResponse, employeeProfilesResponse] = await Promise.all([
         getAllUsers({ page: userPage, limit: itemsPerPage, search: userSearch }),
         getAllPositions({ page: positionPage, limit: itemsPerPage, search: positionSearch }),
+        getAllPositionsAll(),
         getOrganizationalChart(),
         getAllPositionsFlat(),
         getAllContracts({ page: contractPage, limit: itemsPerPage, search: contractSearch }),
@@ -162,6 +165,7 @@ export default function SuperAdminDashboard() {
       setUserMeta(usersResponse.meta);
       setPositions(positionsResponse.data);
       setPositionMeta(positionsResponse.meta);
+      setAllPositions(allPositionsData);
       setOrgChart(orgChartData);
       setFlatPositions(flatPositionsData);
       setContracts(contractsResponse.data);
@@ -1319,7 +1323,7 @@ export default function SuperAdminDashboard() {
             loadData(true);
           }}
           contracts={contracts}
-          positions={positions}
+          positions={allPositions}
           assignment={editingAssignment}
         />
       )}

@@ -507,11 +507,13 @@ export class SeederService {
             result.users = userResult.affected || 0;
             console.log(`✅ ${result.users} کاربر پاک شد`);
 
-            // 7. پاک کردن سمت‌ها (به جز سمت‌های سیستمی)
+            // 7. پاک کردن سمت‌های تستی (فقط سمت‌هایی که هیچ کاربری به آن‌ها ارجاع ندارد)
             console.log('📋 پاک کردن سمت‌های تستی...');
             const positionResult = await this.positionRepository
-                .createQueryBuilder()
+                .createQueryBuilder('position')
                 .delete()
+                .where('NOT EXISTS (SELECT 1 FROM users WHERE users.positionId = position.id)')
+                .andWhere('position.title NOT LIKE :adminPattern', { adminPattern: 'مدیر%' })
                 .execute();
             result.positions = positionResult.affected || 0;
             console.log(`✅ ${result.positions} سمت پاک شد`);
