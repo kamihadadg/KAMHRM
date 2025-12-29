@@ -1,6 +1,8 @@
-import { Controller, Post, Body, Get, Headers, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, Headers, Query, HttpException, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UserRole } from './entities/user.entity';
 
 @Controller('comments')
 export class CommentController {
@@ -37,5 +39,17 @@ export class CommentController {
   async publicCount() {
     const count = await this.commentService.countAll();
     return { count };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/list')
+  async getCommentsForAdmin(@Request() req, @Query('limit') limit?: string) {
+    // Check if user is admin
+    if (req.user.role !== UserRole.SUPERADMIN) {
+      throw new HttpException('دسترسی غیرمجاز', HttpStatus.FORBIDDEN);
+    }
+
+    const n = limit ? parseInt(limit, 10) : undefined;
+    return this.commentService.findRecent(n ?? 100);
   }
 }

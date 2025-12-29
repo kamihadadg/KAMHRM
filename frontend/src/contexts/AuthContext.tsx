@@ -8,7 +8,7 @@ export interface User {
   username: string;
   firstName: string;
   lastName: string;
-  role: 'EMPLOYEE' | 'MANAGER' | 'HR' | 'ADMIN';
+  role: 'PERSONNEL' | 'MIDDLEMANAGER' | 'HRADMIN' | 'SUPERADMIN';
   profileImageUrl?: string; // URL عکس پروفایل
   position?: {
     id: string;

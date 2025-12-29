@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import RouteGuard from '@/components/RouteGuard';
+import Navbar from '@/components/Navbar';
 
 export default function SettingsPage() {
   return (
@@ -15,7 +15,7 @@ export default function SettingsPage() {
 }
 
 function SettingsContent() {
-  const { user, changePassword, logout } = useAuth();
+  const { user, changePassword } = useAuth();
   const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -60,26 +60,7 @@ function SettingsContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                تنظیمات حساب کاربری
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
-              >
-                بازگشت به داشبورد
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar title="تنظیمات حساب کاربری" showDashboardLink={true} />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -110,9 +91,9 @@ function SettingsContent() {
                     نقش
                   </label>
                   <p className="text-gray-900 mt-1">
-                    {user.role === 'EMPLOYEE' ? 'کارمند' :
-                     user.role === 'MANAGER' ? 'مدیر' :
-                     user.role === 'HR' ? 'منابع انسانی' : 'مدیر سیستم'}
+                    {user.role === 'PERSONNEL' ? 'پرسنل' :
+                     user.role === 'MIDDLEMANAGER' ? 'مدیر میانی' :
+                     user.role === 'HRADMIN' ? 'مدیر منابع انسانی' : 'مدیر سیستم'}
                   </p>
                 </div>
               </div>
@@ -203,15 +184,9 @@ function SettingsContent() {
                       از حساب کاربری خود خارج شوید
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      router.push('/');
-                    }}
-                    className="px-4 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50"
-                  >
-                    خروج
-                  </button>
+                  <p className="text-sm text-gray-500">
+                    برای خروج از حساب کاربری، از منوی کاربر در بالای صفحه استفاده کنید.
+                  </p>
                 </div>
               </div>
             </div>

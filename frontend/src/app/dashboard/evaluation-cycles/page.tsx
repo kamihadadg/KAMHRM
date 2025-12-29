@@ -20,7 +20,7 @@ import SearchAndPagination from '@/components/SearchAndPagination';
 
 export default function EvaluationCyclesPage() {
   return (
-    <RouteGuard requireAuth requireRole="ADMIN">
+    <RouteGuard requireAuth>
       <EvaluationCyclesContent />
     </RouteGuard>
   );
@@ -146,7 +146,7 @@ function EvaluationCyclesContent() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-4">
           <Link
-            href="/admin"
+            href="/dashboard"
             className="text-blue-600 hover:text-blue-800 text-sm"
           >
             ← بازگشت به پنل مدیریت

@@ -17,7 +17,7 @@ import {
 
 export default function EvaluationCycleDetailPage() {
   return (
-    <RouteGuard requireAuth requireRole="ADMIN">
+    <RouteGuard requireAuth>
       <EvaluationCycleDetailContent />
     </RouteGuard>
   );
@@ -58,7 +58,7 @@ function EvaluationCycleDetailContent() {
     } catch (error) {
       console.error('Failed to load cycle:', error);
       alert('خطا در بارگذاری دوره');
-      router.push('/admin/evaluation-cycles');
+      router.push('/dashboard/evaluation-cycles');
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,7 @@ function EvaluationCycleDetailContent() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6">
           <Link
-            href="/admin/evaluation-cycles"
+                href="/dashboard/evaluation-cycles"
             className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
           >
             ← بازگشت به لیست دوره‌ها

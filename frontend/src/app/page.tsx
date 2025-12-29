@@ -58,7 +58,7 @@ export default function Home() {
               <span className="text-blue-600 block">ارزیابی و مشارکت</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              سیستم جامع ارزیابی عملکرد، نظرسنجی‌های سازمانی و صندوق انتقادات و پیشنهادات
+              سیستم جامع ارزیابی عملکرد و صندوق انتقادات و پیشنهادات
               برای بهبود مستمر سازمان
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -113,21 +113,6 @@ export default function Home() {
               </h3>
               <p className="text-gray-600">
                 سیستم ورود و ثبت نام ایمن با قابلیت تغییر رمز عبور
-              </p>
-            </div>
-
-            {/* Surveys */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
-              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                نظرسنجی‌های هوشمند
-              </h3>
-              <p className="text-gray-600">
-                ایجاد و مدیریت نظرسنجی‌های متنوع با انواع مختلف سؤالات
               </p>
             </div>
 

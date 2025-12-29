@@ -131,7 +131,7 @@ export class SeederService {
             firstName,
             lastName,
             password: 'password123', // This will be hashed by the auth service
-            role: Math.random() > 0.8 ? 'MANAGER' : 'EMPLOYEE',
+            role: Math.random() > 0.9 ? 'MIDDLEMANAGER' : Math.random() > 0.8 ? 'HRADMIN' : 'PERSONNEL',
             isActive: true,
             positionId,
             employeeProfile: {

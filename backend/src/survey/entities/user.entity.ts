@@ -14,10 +14,10 @@ import { Contract } from '../../hr/entities/contract.entity';
 import { EmployeeProfile } from '../../hr/entities/employee-profile.entity';
 
 export enum UserRole {
-  EMPLOYEE = 'EMPLOYEE',
-  MANAGER = 'MANAGER',
-  HR = 'HR',
-  ADMIN = 'ADMIN',
+  PERSONNEL = 'PERSONNEL',
+  MIDDLEMANAGER = 'MIDDLEMANAGER',
+  HRADMIN = 'HRADMIN',
+  SUPERADMIN = 'SUPERADMIN',
 }
 
 @Entity('users')
@@ -50,7 +50,7 @@ export class User {
   @Column({
     type: 'varchar',
     length: 50,
-    default: UserRole.EMPLOYEE,
+    default: UserRole.PERSONNEL,
   })
   role: UserRole;
 

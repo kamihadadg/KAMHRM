@@ -23,7 +23,7 @@ async function createAdminUser() {
 
     // Check if admin user already exists
     const existingAdmin = await userRepository.findOne({
-      where: { role: UserRole.ADMIN }
+      where: { role: UserRole.SUPERADMIN }
     });
 
     if (existingAdmin) {
@@ -38,7 +38,7 @@ async function createAdminUser() {
       firstName: 'مدیر',
       lastName: 'سیستم',
       password: await bcrypt.hash(adminPassword, 12),
-      role: UserRole.ADMIN,
+      role: UserRole.SUPERADMIN,
       isActive: true,
     };
 

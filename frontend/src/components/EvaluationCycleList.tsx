@@ -87,7 +87,7 @@ export default function EvaluationCycleList({ cycles, onPublish, onRepublish, on
 
             <div className="flex flex-col gap-2 mr-4">
               <Link
-                href={`/admin/evaluation-cycles/${cycle.id}`}
+                href={`/dashboard/evaluation-cycles/${cycle.id}`}
                 className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 text-center"
               >
                 مشاهده

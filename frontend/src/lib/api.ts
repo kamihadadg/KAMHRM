@@ -1,5 +1,3 @@
-import { Survey, SurveyResponse, SurveyResults } from '@/types/survey';
-
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.112:3080';
 
 export interface PaginationQuery {
@@ -24,43 +22,6 @@ export interface PaginatedResponse<T> {
   meta: PaginationMeta;
 }
 
-export async function getActiveSurveys(): Promise<Survey[]> {
-  const response = await fetch(`${API_BASE_URL}/surveys/active`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch surveys');
-  }
-  return response.json();
-}
-
-export async function getSurveyById(id: string): Promise<Survey> {
-  const response = await fetch(`${API_BASE_URL}/surveys/${id}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch survey');
-  }
-  return response.json();
-}
-
-export async function submitSurveyResponse(response: SurveyResponse): Promise<void> {
-  const surveyResponse = await fetch(`${API_BASE_URL}/surveys/${response.surveyId}/submit`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(response),
-  });
-
-  if (!surveyResponse.ok) {
-    throw new Error('Failed to submit survey response');
-  }
-}
-
-export async function getSurveyResults(id: string): Promise<SurveyResults> {
-  const response = await fetch(`${API_BASE_URL}/surveys/${id}/results`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch survey results');
-  }
-  return response.json();
-}
 
 export interface CreateCommentDto {
   name?: string;
@@ -98,6 +59,17 @@ export async function getAdminComments(secret: string, limit = 100): Promise<Com
   return res.json();
 }
 
+export async function getCommentsForAdmin(limit = 100): Promise<CommentItem[]> {
+  const token = localStorage.getItem('auth_token');
+  const res = await fetch(`${API_BASE_URL}/comments/admin/list?limit=${limit}`, {
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to fetch admin comments');
+  return res.json();
+}
+
 export async function getCommentCount(): Promise<number> {
   const res = await fetch(`${API_BASE_URL}/comments/count`);
   if (!res.ok) throw new Error('Failed to fetch comment count');
@@ -127,56 +99,6 @@ export async function getAllUsers(query: PaginationQuery = {}): Promise<Paginate
   return response.json();
 }
 
-// Surveys Management
-export async function getAllSurveys(query: PaginationQuery = {}): Promise<PaginatedResponse<Survey>> {
-  const token = localStorage.getItem('auth_token');
-  const params = new URLSearchParams();
-
-  if (query.page) params.append('page', query.page.toString());
-  if (query.limit) params.append('limit', query.limit.toString());
-  if (query.search) params.append('search', query.search);
-  if (query.sortBy) params.append('sortBy', query.sortBy);
-  if (query.sortOrder) params.append('sortOrder', query.sortOrder);
-
-  const response = await fetch(`${API_BASE_URL}/surveys?${params}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch surveys');
-  }
-  return response.json();
-}
-
-export async function createSurvey(surveyData: any): Promise<Survey> {
-  const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/surveys`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(surveyData),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create survey');
-  }
-  return response.json();
-}
-
-export async function deleteSurvey(id: string): Promise<void> {
-  const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/surveys/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Failed to delete survey');
-  }
-}
 
 export async function createUser(userData: any): Promise<any> {
   const token = localStorage.getItem('auth_token');

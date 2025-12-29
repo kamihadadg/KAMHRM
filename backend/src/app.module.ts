@@ -4,9 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SurveyModule } from './survey/survey.module';
 import { AuthModule } from './auth/auth.module';
 import { HrModule } from './hr/hr.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -24,9 +24,9 @@ import { HrModule } from './hr/hr.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Set to false in production
     }),
-    SurveyModule,
     AuthModule,
     HrModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [

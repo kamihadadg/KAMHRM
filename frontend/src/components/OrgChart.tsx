@@ -110,14 +110,14 @@ const renderCustomNode = ({ nodeDatum }: any) => {
           x="0"
           y="45"
           textAnchor="middle"
-          fill={attributes.role === 'ADMIN' ? '#dc2626' : attributes.role === 'MANAGER' ? '#059669' : '#6b7280'}
+          fill={attributes.role === 'SUPERADMIN' ? '#dc2626' : attributes.role === 'MIDDLEMANAGER' ? '#059669' : attributes.role === 'HRADMIN' ? '#2563eb' : '#6b7280'}
           fontSize="8"
           fontWeight="bold"
           fontFamily="Arial, sans-serif"
         >
-          {attributes.role === 'ADMIN' ? 'مدیر سیستم' :
-            attributes.role === 'MANAGER' ? 'مدیر' :
-              attributes.role === 'HR' ? 'منابع انسانی' : 'کارمند'}
+          {attributes.role === 'SUPERADMIN' ? 'مدیر سیستم' :
+            attributes.role === 'MIDDLEMANAGER' ? 'مدیر میانی' :
+              attributes.role === 'HRADMIN' ? 'مدیر منابع انسانی' : 'پرسنل'}
         </text>
       )}
     </g>

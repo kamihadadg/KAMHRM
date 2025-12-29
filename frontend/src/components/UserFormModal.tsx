@@ -31,8 +31,7 @@ export default function UserFormModal({ user, users, positions, onClose, onSave 
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     password: '',
-    managerId: user?.manager?.id || '',
-    role: user?.role || 'EMPLOYEE',
+    role: user?.role || 'PERSONNEL',
     profileImageUrl: user?.profileImageUrl || '',
   });
 
@@ -63,28 +62,6 @@ export default function UserFormModal({ user, users, positions, onClose, onSave 
     }
   };
 
-  // Auto-assign manager when position changes
-  const handlePositionChange = (positionId: string) => {
-    setFormData(prev => ({ ...prev, positionId }));
-
-    if (positionId) {
-      // Find the selected position
-      const selectedPosition = positions.find((p: any) => p.id === positionId);
-
-      if (selectedPosition) {
-        // Auto-assign manager if position has parent
-        if (selectedPosition.parentPositionId) {
-          // Find parent position and its employees (potential managers)
-          const parentPosition = positions.find((p: any) => p.id === selectedPosition.parentPositionId);
-          if (parentPosition && parentPosition.employees && parentPosition.employees.length > 0) {
-            // Auto-assign the first employee of parent position as manager
-            const autoManagerId = parentPosition.employees[0].id;
-            setFormData(prev => ({ ...prev, managerId: autoManagerId }));
-          }
-        }
-      }
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -255,51 +232,24 @@ export default function UserFormModal({ user, users, positions, onClose, onSave 
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 block">مدیر مستقیم</label>
-                <div className="relative">
-                  <select
-                    value={formData.managerId}
-                    onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
-                  >
-                    <option value="">انتخاب کنید...</option>
-                    {users
-                      .filter((u: User) => u.role === 'MANAGER' || u.role === 'ADMIN')
-                      .map((u: User) => (
-                        <option key={u.id} value={u.id}>
-                          {u.firstName} {u.lastName}
-                        </option>
-                      ))}
-                  </select>
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 block">سطح دسترسی</label>
-                <div className="relative">
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
-                    required
-                  >
-                    <option value="EMPLOYEE">کارمند عادی</option>
-                    <option value="MANAGER">مدیر</option>
-                    <option value="HR">منابع انسانی</option>
-                    <option value="ADMIN">مدیر سیستم</option>
-                  </select>
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 block">سطح دسترسی</label>
+              <div className="relative">
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                  required
+                >
+                  <option value="PERSONNEL">پرسنل</option>
+                  <option value="MIDDLEMANAGER">مدیر میانی</option>
+                  <option value="HRADMIN">مدیر منابع انسانی</option>
+                  <option value="SUPERADMIN">مدیر سیستم</option>
+                </select>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
             </div>

@@ -19,7 +19,7 @@ import SearchAndPagination from '@/components/SearchAndPagination';
 
 export default function EvaluationTemplatesPage() {
   return (
-    <RouteGuard requireAuth requireRole="ADMIN">
+    <RouteGuard requireAuth>
       <EvaluationTemplatesContent />
     </RouteGuard>
   );
@@ -142,7 +142,7 @@ function EvaluationTemplatesContent() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-4">
           <Link
-            href="/admin"
+            href="/dashboard"
             className="text-blue-600 hover:text-blue-800 text-sm"
           >
             ← بازگشت به پنل مدیریت

@@ -66,7 +66,7 @@ export class AuthController {
   @Post('admin/users')
   async createUser(@Request() req, @Body() createUserDto: CreateUserDto) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const user = await this.authService.createUser(createUserDto);
@@ -80,7 +80,7 @@ export class AuthController {
     @Query() query: PaginationQuery
   ) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     return this.authService.getAllUsers(query);
@@ -90,7 +90,7 @@ export class AuthController {
   @Get('admin/users/:id')
   async getUserById(@Request() req, @Param('id') id: string) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     return this.authService.getUserById(id);
@@ -104,7 +104,7 @@ export class AuthController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const user = await this.authService.updateUser(id, updateUserDto);
@@ -115,7 +115,7 @@ export class AuthController {
   @Delete('admin/users/:id')
   async deleteUser(@Request() req, @Param('id') id: string) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     await this.authService.deleteUser(id);
@@ -126,7 +126,7 @@ export class AuthController {
   @Post('admin/users/:id/reset-password')
   async resetUserPassword(@Request() req, @Param('id') id: string) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const result = await this.authService.resetUserPassword(id);
@@ -139,7 +139,7 @@ export class AuthController {
   @Post('admin/positions')
   async createPosition(@Request() req, @Body() createPositionDto: CreatePositionDto) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const position = await this.authService.createPosition(createPositionDto);
@@ -153,7 +153,7 @@ export class AuthController {
     @Query() query: PaginationQuery
   ) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     return this.authService.getAllPositions(query);
@@ -163,7 +163,7 @@ export class AuthController {
   @Get('admin/positions/flat')
   async getAllPositionsFlat(@Request() req) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     return this.authService.getAllPositionsFlat();
@@ -173,7 +173,7 @@ export class AuthController {
   @Get('admin/positions/:id')
   async getPositionById(@Request() req, @Param('id') id: string) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     return this.authService.getPositionById(id);
@@ -183,7 +183,7 @@ export class AuthController {
   @Put('admin/positions/reset-layout')
   async resetOrgChartLayout(@Request() req) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     await this.authService.resetAllPositionCoordinates();
@@ -198,7 +198,7 @@ export class AuthController {
     @Body() updateData: Partial<CreatePositionDto>,
   ) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const position = await this.authService.updatePosition(id, updateData);
@@ -209,7 +209,7 @@ export class AuthController {
   @Delete('admin/positions/:id')
   async deletePosition(@Request() req, @Param('id') id: string) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     await this.authService.deletePosition(id);
@@ -220,7 +220,7 @@ export class AuthController {
   @Get('admin/org-chart')
   async getOrganizationalChart(@Request() req) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     return this.authService.getOrganizationalChart();
@@ -234,7 +234,7 @@ export class AuthController {
     @Body() body: { parentPositionId: string | null }
   ) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const position = await this.authService.updatePositionOrder(id, body.parentPositionId);
@@ -249,7 +249,7 @@ export class AuthController {
     @Body() body: { x: number | null, y: number | null }
   ) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     await this.authService.updatePositionCoordinates(id, body.x, body.y);
@@ -291,7 +291,7 @@ export class AuthController {
   @Get('debug/positions')
   async debugPositions(@Request() req) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
     const positions = await this.authService.getAllPositionsFlat();
@@ -310,7 +310,7 @@ export class AuthController {
   @Delete('debug/cleanup-invalid-positions')
   async cleanupInvalidPositions(@Request() req) {
     // Check if user is admin
-    if (req.user.role !== UserRole.ADMIN) {
+    if (req.user.role !== UserRole.SUPERADMIN) {
       throw new Error('دسترسی غیرمجاز');
     }
 

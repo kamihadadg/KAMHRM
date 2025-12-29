@@ -39,7 +39,7 @@ async function bootstrap() {
           firstName: 'مدیر',
           lastName: 'سیستم',
           managerId: undefined,
-          role: UserRole.ADMIN,
+          role: UserRole.SUPERADMIN,
           password: adminPassword, // AuthService will hash it
         });
 

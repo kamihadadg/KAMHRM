@@ -154,7 +154,7 @@ export default function EmployeeProfileFormModal({
                                 onChange={(e) => setSelectedUserId(e.target.value)}
                             >
                                 <option value="">انتخاب کاربر...</option>
-                                {users.filter(u => u.role !== 'ADMIN').map((user) => (
+                                {users.filter(u => u.role !== 'SUPERADMIN').map((user) => (
                                     <option key={user.id} value={user.id}>
                                         {user.firstName} {user.lastName} ({user.employeeId || 'بدون کد پرسنلی'})
                                     </option>
