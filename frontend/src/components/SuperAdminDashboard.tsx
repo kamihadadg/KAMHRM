@@ -116,6 +116,7 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     loadData();
     loadComments();
+    loadSeederStats();
   }, []);
 
   const loadComments = async () => {
@@ -320,83 +321,212 @@ export default function SuperAdminDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Tabs */}
+        {/* Tab Cards */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                مدیریت کاربران ({users.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('positions')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'positions'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                مدیریت سمت‌ها ({positions.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('org-chart')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'org-chart'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                چارت سازمانی
-              </button>
-              <button
-                onClick={() => setActiveTab('contracts')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'contracts'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                قراردادها و احکام
-              </button>
-              <button
-                onClick={() => setActiveTab('employees')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'employees'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                مدیریت پرسنل ({employeeProfiles.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('performance')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'performance'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                ارزیابی عملکرد
-              </button>
-              <button
-                onClick={() => setActiveTab('comments')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'comments'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                صندوق انتقادات ({comments.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('seeder')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'seeder'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                مدیریت داده‌ها
-              </button>
-            </nav>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'users'
+                  ? 'bg-blue-50 border-blue-500 shadow-lg shadow-blue-500/20'
+                  : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'users' ? 'bg-blue-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'users' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'users' ? 'text-blue-700' : 'text-gray-700'}`}>
+                    کاربران
+                  </p>
+                  <p className={`text-xs mt-0.5 ${activeTab === 'users' ? 'text-blue-600' : 'text-gray-500'}`}>
+                    {userSearch ? userMeta?.total || 0 : seederStats?.users || userMeta?.total || 0}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('positions')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'positions'
+                  ? 'bg-green-50 border-green-500 shadow-lg shadow-green-500/20'
+                  : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'positions' ? 'bg-green-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'positions' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'positions' ? 'text-green-700' : 'text-gray-700'}`}>
+                    سمت‌ها
+                  </p>
+                  <p className={`text-xs mt-0.5 ${activeTab === 'positions' ? 'text-green-600' : 'text-gray-500'}`}>
+                    {positionSearch ? positionMeta?.total || 0 : seederStats?.positions || positionMeta?.total || 0}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('org-chart')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'org-chart'
+                  ? 'bg-purple-50 border-purple-500 shadow-lg shadow-purple-500/20'
+                  : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'org-chart' ? 'bg-purple-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'org-chart' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'org-chart' ? 'text-purple-700' : 'text-gray-700'}`}>
+                    چارت سازمانی
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('contracts')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'contracts'
+                  ? 'bg-orange-50 border-orange-500 shadow-lg shadow-orange-500/20'
+                  : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'contracts' ? 'bg-orange-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'contracts' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'contracts' ? 'text-orange-700' : 'text-gray-700'}`}>
+                    قراردادها
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('employees')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'employees'
+                  ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-500/20'
+                  : 'bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'employees' ? 'bg-indigo-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'employees' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'employees' ? 'text-indigo-700' : 'text-gray-700'}`}>
+                    پرسنل
+                  </p>
+                  <p className={`text-xs mt-0.5 ${activeTab === 'employees' ? 'text-indigo-600' : 'text-gray-500'}`}>
+                    {employeeProfileSearch ? employeeProfileMeta?.total || 0 : seederStats?.profiles || employeeProfileMeta?.total || 0}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('performance')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'performance'
+                  ? 'bg-yellow-50 border-yellow-500 shadow-lg shadow-yellow-500/20'
+                  : 'bg-white border-gray-200 hover:border-yellow-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'performance' ? 'bg-yellow-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'performance' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'performance' ? 'text-yellow-700' : 'text-gray-700'}`}>
+                    ارزیابی
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('comments')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'comments'
+                  ? 'bg-red-50 border-red-500 shadow-lg shadow-red-500/20'
+                  : 'bg-white border-gray-200 hover:border-red-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'comments' ? 'bg-red-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'comments' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'comments' ? 'text-red-700' : 'text-gray-700'}`}>
+                    انتقادات
+                  </p>
+                  <p className={`text-xs mt-0.5 ${activeTab === 'comments' ? 'text-red-600' : 'text-gray-500'}`}>
+                    {comments.length}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('seeder')}
+              className={`p-4 rounded-xl border-2 transition-all ${
+                activeTab === 'seeder'
+                  ? 'bg-teal-50 border-teal-500 shadow-lg shadow-teal-500/20'
+                  : 'bg-white border-gray-200 hover:border-teal-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  activeTab === 'seeder' ? 'bg-teal-500' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${activeTab === 'seeder' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xs font-semibold ${activeTab === 'seeder' ? 'text-teal-700' : 'text-gray-700'}`}>
+                    داده‌ها
+                  </p>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -789,93 +919,6 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* Surveys Tab - Removed */}
-        {false && activeTab === 'surveys' && (
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  لیست نظرسنجی‌ها
-                </h3>
-                <button
-                  onClick={() => setShowSurveyForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  ایجاد نظرسنجی جدید
-                </button>
-              </div>
-
-              {/* Search and Pagination */}
-              <SearchAndPagination
-                searchValue={surveySearch}
-                onSearchChange={setSurveySearch}
-                searchPlaceholder="جستجو بر اساس عنوان نظرسنجی..."
-                currentPage={surveyPage}
-                totalPages={surveyMeta?.totalPages || 1}
-                onPageChange={setSurveyPage}
-                totalItems={surveyMeta?.total || 0}
-                itemsPerPage={itemsPerPage}
-                showingFrom={surveyMeta ? (surveyPage - 1) * itemsPerPage + 1 : 0}
-                showingTo={surveyMeta ? Math.min(surveyPage * itemsPerPage, surveyMeta.total) : 0}
-              />
-
-              <div className="overflow-hidden border border-gray-100 rounded-2xl mt-4">
-                <table className="min-w-full divide-y divide-gray-100">
-                  <thead className="bg-[#f8fafc]">
-                    <tr>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">عنوان</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">وضعیت</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">تاریخ پایان</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">تعداد سوالات</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">عملیات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-50">
-                    {surveys.map((survey) => (
-                      <tr key={survey.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{survey.title}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {survey.isActive ? (
-                            <span className="px-2 py-1 text-xs font-bold text-green-600 bg-green-50 rounded-md border border-green-100">فعال</span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-bold text-gray-500 bg-gray-50 rounded-md border border-gray-100">غیرفعال</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {survey.endDate ? new Date(survey.endDate).toLocaleDateString('fa-IR') : 'بدون محدودیت'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {survey.questions.length} سوال
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handleDeleteSurvey(survey.id)}
-                            className="group p-2 rounded-lg text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
-                            title="حذف"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {surveys.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
-                          {surveySearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ نظرسنجی یافت نشد. با دکمه بالا یکی ایجاد کنید.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
         {showUserForm && (
           <UserFormModal
             user={editingUser}
