@@ -87,7 +87,7 @@ export default function Navbar({ title, showDashboardLink = false }: NavbarProps
                       {user.firstName} {user.lastName}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {user.email}
+                      {user.username}
                     </p>
                   </div>
                   <Link

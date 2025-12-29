@@ -163,7 +163,11 @@ export class SeederService {
         };
     }
 
-    async seedTestData(): Promise<SeederResult> {
+    getDefaultPositionCount(): number {
+        return this.positionsData.length;
+    }
+
+    async seedTestData(userCount: number = 100, positionCount: number = this.positionsData.length): Promise<SeederResult> {
         console.log('🚀 شروع ایجاد داده‌های تستی...');
 
         const result: SeederResult = {
@@ -182,8 +186,9 @@ export class SeederService {
         const createdPositions: Position[] = [];
         const positionMap = new Map<string, Position>();
 
-        // ابتدا همه سمت‌ها را بدون parentPositionId ایجاد می‌کنیم
-        for (const positionData of this.positionsData) {
+        // ابتدا سمت‌های انتخاب شده را بدون parentPositionId ایجاد می‌کنیم
+        const selectedPositions = this.positionsData.slice(0, positionCount);
+        for (const positionData of selectedPositions) {
             try {
                 const { parentTitle, department, ...positionFields } = positionData;
                 const savedPosition = await this.positionRepository.save({
@@ -202,7 +207,7 @@ export class SeederService {
 
         // سپس parentPositionId را برای سمت‌هایی که parent دارند تنظیم می‌کنیم
         console.log('🔗 تنظیم روابط سلسله مراتبی چارت سازمانی...');
-        for (const positionData of this.positionsData) {
+        for (const positionData of selectedPositions) {
             if (positionData.parentTitle) {
                 try {
                     const position = positionMap.get(positionData.title);
@@ -225,7 +230,7 @@ export class SeederService {
             // 2. ایجاد پرسنل
             console.log('👥 ایجاد پرسنل...');
 
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= userCount; i++) {
                 try {
                     // تولید داده کارمند (شامل department)
                     const tempEmployeeData = this.generateEmployeeData(i, 'temp');

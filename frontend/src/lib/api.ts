@@ -808,13 +808,15 @@ export async function deletePerformanceGoal(id: string): Promise<void> {
 
 // Seeder API Functions
 
-export async function seedTestData(): Promise<any> {
+export async function seedTestData(userCount?: number, positionCount?: number): Promise<any> {
   const token = localStorage.getItem('auth_token');
   const response = await fetch(`${API_BASE_URL}/hr/seeder/seed`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
+    body: JSON.stringify({ userCount, positionCount }),
   });
   if (!response.ok) {
     const error = await response.json();

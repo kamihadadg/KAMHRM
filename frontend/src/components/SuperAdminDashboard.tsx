@@ -89,6 +89,8 @@ export default function SuperAdminDashboard() {
   // Seeder State
   const [seederStats, setSeederStats] = useState<any>(null);
   const [seederLoading, setSeederLoading] = useState(false);
+  const [userCount, setUserCount] = useState(100);
+  const [positionCount, setPositionCount] = useState(38); // تعداد پیش‌فرض سمت‌ها
 
   // Password Reset Modal State
   const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
@@ -179,14 +181,14 @@ export default function SuperAdminDashboard() {
   };
 
   const handleSeedData = async () => {
-    if (!confirm('آیا مطمئن هستید که می‌خواهید داده‌های تستی ایجاد کنید؟ این عملیات ممکن است کمی زمان‌بر باشد.')) {
+    if (!confirm(`آیا مطمئن هستید که می‌خواهید ${positionCount} سمت و ${userCount} کاربر و داده‌های مرتبط ایجاد کنید؟ این عملیات ممکن است کمی زمان‌بر باشد.`)) {
       return;
     }
 
     setSeederLoading(true);
     try {
-      await seedTestData();
-      alert('داده‌های تستی با موفقیت ایجاد شد!');
+      await seedTestData(userCount, positionCount);
+      alert(`${positionCount} سمت و ${userCount} کاربر و داده‌های مرتبط با موفقیت ایجاد شد!`);
       await loadData(true); // Reload all data
     } catch (error: any) {
       console.error('Error seeding data:', error);
@@ -240,6 +242,20 @@ export default function SuperAdminDashboard() {
     } catch (error: any) {
       console.error('Error resetting password:', error);
       alert(`خطا در ریست رمز عبور: ${error.message}`);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    const action = currentStatus ? 'غیرفعال' : 'فعال';
+    if (!confirm(`آیا مطمئن هستید که می‌خواهید این کاربر را ${action} کنید؟`)) return;
+
+    try {
+      await updateUser(userId, { isActive: !currentStatus });
+      await loadData();
+      alert(`کاربر با موفقیت ${action} شد.`);
+    } catch (error: any) {
+      console.error('Error toggling user status:', error);
+      alert(`خطا در تغییر وضعیت کاربر: ${error.message}`);
     }
   };
 
@@ -577,6 +593,9 @@ export default function SuperAdminDashboard() {
                         نقش
                       </th>
                       <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        وضعیت
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                         عملیات
                       </th>
                     </tr>
@@ -618,6 +637,13 @@ export default function SuperAdminDashboard() {
                                 user.role === 'HRADMIN' ? 'مدیر منابع انسانی' : 'پرسنل'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.isActive ? 'فعال' : 'غیرفعال'}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
                             <button
@@ -643,6 +669,27 @@ export default function SuperAdminDashboard() {
                             </button>
                             {user.role !== 'SUPERADMIN' && (
                               <button
+                                onClick={() => handleToggleUserStatus(user.id, user.isActive)}
+                                className={`group p-2 rounded-lg transition-all border border-transparent hover:border-gray-100 ${
+                                  user.isActive
+                                    ? 'text-gray-600 hover:bg-gray-50'
+                                    : 'text-green-600 hover:bg-green-50'
+                                }`}
+                                title={user.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+                              >
+                                {user.isActive ? (
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-12.728 12.728m0 0L5.636 18.364m12.728-12.728L18.364 18.364" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                )}
+                              </button>
+                            )}
+                            {user.role !== 'SUPERADMIN' && (
+                              <button
                                 onClick={() => handleDeleteUser(user.id)}
                                 className="group p-2 rounded-lg text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
                                 title="حذف"
@@ -658,7 +705,7 @@ export default function SuperAdminDashboard() {
                     ))}
                     {users.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
+                        <td colSpan={6} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
                           {userSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ کاربری ثبت نشده است.'}
                         </td>
                       </tr>
@@ -1637,15 +1684,49 @@ export default function SuperAdminDashboard() {
                   ایجاد داده‌های تستی
                 </h4>
                 <p className="text-sm text-green-700 mb-4">
-                  این عملیات 100 پرسنل، 20 سمت، اهداف عملکردی و ارزیابی‌های نمونه ایجاد می‌کند.
+                  این عملیات سمت‌ها، اهداف عملکردی و ارزیابی‌های نمونه ایجاد می‌کند و تعداد مشخصی کاربر اضافه می‌کند.
                 </p>
+
+                {/* تعداد سمت‌ها */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-green-700 mb-2">
+                    تعداد سمت‌ها
+                  </label>
+                  <input
+                    type="number"
+                    value={positionCount}
+                    onChange={(e) => setPositionCount(Math.max(1, Math.min(38, parseInt(e.target.value) || 1)))}
+                    min="1"
+                    max="38"
+                    className="w-full px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-green-800"
+                    placeholder="تعداد سمت‌ها را وارد کنید (حداکثر 38)"
+                  />
+                  <p className="text-xs text-green-600 mt-1">حداکثر 38 سمت در چارت سازمانی موجود است</p>
+                </div>
+
+                {/* تعداد کاربران */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-green-700 mb-2">
+                    تعداد کاربران
+                  </label>
+                  <input
+                    type="number"
+                    value={userCount}
+                    onChange={(e) => setUserCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    min="1"
+                    max="1000"
+                    className="w-full px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-green-800"
+                    placeholder="تعداد کاربران را وارد کنید"
+                  />
+                </div>
+
                 <button
                   onClick={handleSeedData}
                   disabled={seederLoading}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 w-full"
                 >
                   {seederLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-                  ایجاد داده‌های تستی
+                  ایجاد {positionCount} سمت و {userCount} کاربر
                 </button>
               </div>
 
@@ -1671,7 +1752,8 @@ export default function SuperAdminDashboard() {
                   اطلاعات مفید
                 </h4>
                 <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• کاربران تستی: نام کاربری user001 تا user100، رمز عبور: password123</li>
+                  <li>• سمت‌های سازمانی: {positionCount} سمت از چارت سازمانی انتخاب شده</li>
+                  <li>• کاربران تستی: نام کاربری user001 تا user{userCount.toString().padStart(3, '0')}، رمز عبور: password123</li>
                   <li>• داده‌های تستی با پیشوند "تستی" یا "نمونه" مشخص می‌شوند</li>
                   <li>• عملیات seeding ممکن است چند دقیقه طول بکشد</li>
                   <li>• همیشه ابتدا داده‌ها را backup بگیرید</li>

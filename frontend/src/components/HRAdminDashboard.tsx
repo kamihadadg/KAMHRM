@@ -242,6 +242,20 @@ export default function HRAdminDashboard() {
     }
   };
 
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    const action = currentStatus ? 'غیرفعال' : 'فعال';
+    if (!confirm(`آیا مطمئن هستید که می‌خواهید این کاربر را ${action} کنید؟`)) return;
+
+    try {
+      await updateUser(userId, { isActive: !currentStatus });
+      await loadData();
+      alert(`کاربر با موفقیت ${action} شد.`);
+    } catch (error: any) {
+      console.error('Error toggling user status:', error);
+      alert(`خطا در تغییر وضعیت کاربر: ${error.message}`);
+    }
+  };
+
   const handleDeletePosition = async (positionId: string) => {
     if (!confirm('آیا مطمئن هستید که می‌خواهید این سمت را حذف کنید؟')) return;
 
@@ -425,6 +439,9 @@ export default function HRAdminDashboard() {
                         نقش
                       </th>
                       <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        وضعیت
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                         عملیات
                       </th>
                     </tr>
@@ -466,6 +483,13 @@ export default function HRAdminDashboard() {
                                 user.role === 'HRADMIN' ? 'مدیر منابع انسانی' : 'پرسنل'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.isActive ? 'فعال' : 'غیرفعال'}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
                             <button
@@ -491,6 +515,27 @@ export default function HRAdminDashboard() {
                             </button>
                             {user.role !== 'SUPERADMIN' && (
                               <button
+                                onClick={() => handleToggleUserStatus(user.id, user.isActive)}
+                                className={`group p-2 rounded-lg transition-all border border-transparent hover:border-gray-100 ${
+                                  user.isActive
+                                    ? 'text-gray-600 hover:bg-gray-50'
+                                    : 'text-green-600 hover:bg-green-50'
+                                }`}
+                                title={user.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+                              >
+                                {user.isActive ? (
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-12.728 12.728m0 0L5.636 18.364m12.728-12.728L18.364 18.364" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                )}
+                              </button>
+                            )}
+                            {user.role !== 'SUPERADMIN' && (
+                              <button
                                 onClick={() => handleDeleteUser(user.id)}
                                 className="group p-2 rounded-lg text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
                                 title="حذف"
@@ -506,7 +551,7 @@ export default function HRAdminDashboard() {
                     ))}
                     {users.filter(u => u.role !== 'SUPERADMIN').length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
+                        <td colSpan={6} className="px-6 py-10 text-center text-gray-500 bg-gray-50">
                           {userSearch ? 'نتیجه‌ای یافت نشد.' : 'هیچ کاربری ثبت نشده است.'}
                         </td>
                       </tr>
@@ -1182,99 +1227,6 @@ export default function HRAdminDashboard() {
                   <p className="text-gray-500">هنوز نظری ثبت نشده است.</p>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Seeder Tab - Removed for HRAdmin */}
-      {false && activeTab === 'seeder' && (
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  مدیریت داده‌های تستی
-                </h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  ایجاد و پاک کردن داده‌های آزمایشی برای تست سیستم
-                </p>
-              </div>
-            </div>
-
-            {/* Statistics */}
-            {seederStats && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{seederStats.positions}</div>
-                  <div className="text-sm text-blue-800">سمت‌ها</div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{seederStats.users}</div>
-                  <div className="text-sm text-green-800">کاربران</div>
-                </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">{seederStats.profiles}</div>
-                  <div className="text-sm text-yellow-800">پروفایل‌ها</div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{seederStats.goals}</div>
-                  <div className="text-sm text-purple-800">اهداف</div>
-                </div>
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{seederStats.evaluations}</div>
-                  <div className="text-sm text-red-800">ارزیابی‌ها</div>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="text-md font-medium text-green-800 mb-2">
-                  ایجاد داده‌های تستی
-                </h4>
-                <p className="text-sm text-green-700 mb-4">
-                  این عملیات 100 پرسنل، 20 سمت، اهداف عملکردی و ارزیابی‌های نمونه ایجاد می‌کند.
-                </p>
-                <button
-                  onClick={handleSeedData}
-                  disabled={seederLoading}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {seederLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-                  ایجاد داده‌های تستی
-                </button>
-              </div>
-
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="text-md font-medium text-red-800 mb-2">
-                  پاک کردن داده‌های تستی
-                </h4>
-                <p className="text-sm text-red-700 mb-4">
-                  این عملیات تمام داده‌های تستی را پاک می‌کند. این عملیات قابل بازگشت نیست!
-                </p>
-                <button
-                  onClick={handleClearData}
-                  disabled={seederLoading}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {seederLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-                  پاک کردن داده‌های تستی
-                </button>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-md font-medium text-blue-800 mb-2">
-                  اطلاعات مفید
-                </h4>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• کاربران تستی: نام کاربری user001 تا user100، رمز عبور: password123</li>
-                  <li>• داده‌های تستی با پیشوند "تستی" یا "نمونه" مشخص می‌شوند</li>
-                  <li>• عملیات seeding ممکن است چند دقیقه طول بکشد</li>
-                  <li>• همیشه ابتدا داده‌ها را backup بگیرید</li>
-                </ul>
-              </div>
             </div>
           </div>
         </div>
